@@ -3,6 +3,7 @@
 // 這裡負責 renderer / camera / 渲染迴圈 / 視窗縮放 / 省電暫停。
 
 import * as THREE from 'three'
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { createBlob, BLOB_CONFIG } from './blob.js'
 import { createCards } from './cards.js'
 import { initControls } from './controls.js'
@@ -17,6 +18,8 @@ const CONFIG = {
   maxPixelRatio: 1.75, // 限制解析度倍率，避免 retina 螢幕吃太多效能
   background: '#0a0a0d',
   mouseLerp: 0.04,     // 滑鼠跟隨的慢半拍程度（越小越慵懶）
+  fboSize: 1024,       // 玻璃折射用的離屏畫布解析度（手機減半）
+  fboSizeMobile: 512,
 }
 
 export function initScene() {
@@ -34,6 +37,16 @@ export function initScene() {
 
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(CONFIG.background)
+
+  // 環境貼圖：給玻璃材質反射用（沒有它玻璃會死白一片）
+  const pmrem = new THREE.PMREMGenerator(renderer)
+  scene.environment = pmrem.fromScene(new RoomEnvironment()).texture
+  pmrem.dispose()
+
+  // 一盞桃紅點光，讓玻璃透出品牌色的光暈
+  const pinkLight = new THREE.PointLight('#E931CC', 30, 12)
+  pinkLight.position.set(-3, 2, 4)
+  scene.add(pinkLight)
 
   const camera = new THREE.PerspectiveCamera(
     isMobile ? CONFIG.cameraFovMobile : CONFIG.cameraFov,
@@ -75,6 +88,10 @@ export function initScene() {
     renderer.setSize(window.innerWidth, window.innerHeight)
   })
 
+  // ----- 玻璃折射用的離屏畫布（固定解析度，跟視窗大小無關，效能可控）-----
+  const fboSize = isMobile ? CONFIG.fboSizeMobile : CONFIG.fboSize
+  const transmissionFbo = new THREE.WebGLRenderTarget(fboSize, fboSize)
+
   // ----- 渲染迴圈 -----
   const clock = new THREE.Clock()
   let rafId = null
@@ -93,6 +110,19 @@ export function initScene() {
 
     controls.update(frameDelta(t)) // 拖曳慣性/自轉/縮放/hover
     cards.update(camera)           // billboard：卡片面向鏡頭
+
+    // ----- 玻璃折射的兩段式渲染 -----
+    // 1. 把玻璃藏起來，先將「玻璃後面的世界」（卡片們）畫進離屏畫布 FBO
+    // 2. 把 FBO 餵給玻璃材質當折射來源，再正常畫整個場景
+    if (blob.isTransmission) {
+      blob.mesh.visible = false
+      renderer.setRenderTarget(transmissionFbo)
+      renderer.render(scene, camera)
+      blob.mesh.visible = true
+      blob.material.buffer = transmissionFbo.texture
+      blob.material.time = t // 玻璃內部扭曲的流動時間
+      renderer.setRenderTarget(null)
+    }
 
     renderer.render(scene, camera)
     rafId = requestAnimationFrame(tick)
