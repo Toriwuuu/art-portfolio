@@ -3,9 +3,10 @@ import './scss/main.scss'
 import { initIcons } from './js/icons.js'
 import { initMotion } from './js/motion.js'
 import { initGallery } from './js/gallery.js'
+import { open as openLightbox } from './js/lightbox.js'
 
 initIcons()   // 把 data-icon 佔位填入 Material Symbols SVG
 initMotion()  // header 隱現、漢堡選單、TOP 按鈕
 
-// 渲染兩個畫廊區；點擊作品的行為先留空，M3 接上燈箱
-initGallery(() => {})
+// 渲染兩個畫廊區，點擊作品開燈箱
+initGallery(openLightbox)
