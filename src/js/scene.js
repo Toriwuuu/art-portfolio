@@ -4,6 +4,9 @@
 
 import * as THREE from 'three'
 import { createBlob, BLOB_CONFIG } from './blob.js'
+import { createCards } from './cards.js'
+import { initControls } from './controls.js'
+import { open as openLightbox, setSceneHooks } from './lightbox.js'
 
 // ---------- 可調參數 ----------
 const CONFIG = {
@@ -44,6 +47,20 @@ export function initScene() {
   const blob = createBlob(isMobile)
   scene.add(blob.mesh)
 
+  // ----- 作品卡片球 -----
+  const cards = createCards({ isMobile, reducedMotion })
+  scene.add(cards.group)
+
+  // ----- 互動：拖曳/慣性/縮放/hover/點擊 -----
+  const controls = initControls({
+    canvas,
+    camera,
+    group: cards.group,
+    cards: cards.cards,
+    reducedMotion,
+    onCardClick: openLightbox,
+  })
+
   // ----- 滑鼠：目標值 → 每幀慢慢追上（lerp）-----
   const mouseTarget = new THREE.Vector2(0, 0)
   window.addEventListener('pointermove', (e) => {
@@ -74,8 +91,19 @@ export function initScene() {
     blob.mesh.rotation.y = t * 0.05 + blob.uniforms.uMouse.value.x * BLOB_CONFIG.mouseTilt
     blob.mesh.rotation.x = blob.uniforms.uMouse.value.y * -BLOB_CONFIG.mouseTilt
 
+    controls.update(frameDelta(t)) // 拖曳慣性/自轉/縮放/hover
+    cards.update(camera)           // billboard：卡片面向鏡頭
+
     renderer.render(scene, camera)
     rafId = requestAnimationFrame(tick)
+  }
+
+  // 每幀間隔秒數（夾上限避免切分頁回來時跳一大步）
+  let lastT = 0
+  function frameDelta(t) {
+    const dt = Math.min(t - lastT, 0.05)
+    lastT = t
+    return dt
   }
   tick()
 
@@ -99,6 +127,9 @@ export function initScene() {
   document.addEventListener('visibilitychange', () => {
     document.hidden ? pause() : resume()
   })
+
+  // 燈箱打開時也暫停（黑底蓋住場景了，沒必要繼續畫），關閉恢復
+  setSceneHooks({ onOpen: pause, onClose: resume })
 
   // 開發模式掛在 window 上，方便自動化測試讀內部狀態
   if (import.meta.env.DEV) {
