@@ -1,0 +1,58 @@
+@use 'variables' as *;
+
+// ===== 字型 =====
+// 修正舊站 bug：原本兩個 src 寫在同一個 @font-face 裡，italic 會蓋掉 regular。
+// 改成同一個家族名稱、用 font-style 區分，weight 100-900 由變體字型涵蓋。
+@font-face {
+  font-family: 'Chivo';
+  src: url('../assets/font/Chivo-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Chivo';
+  src: url('../assets/font/Chivo-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+// ===== 全站基礎 =====
+body {
+  font-family:
+    'Chivo',
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'PingFang TC', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
+  color: $white;
+
+  // 雜訊 + 深色漸層：沿用舊站氛圍。
+  // 這同時是 WebGL 不可用時的備案背景（流體背景畫不出來也不會變白頁）
+  background:
+    url('../assets/noise.png'),
+    linear-gradient(
+      rgba(39, 167, 175, 0), rgba(55, 13, 97, 0.3), rgba(169, 4, 93, 0.25),
+      rgba(38, 87, 43, 0.25), rgba(44, 14, 74, 0.42), rgba(21, 71, 99, 0.33),
+      rgba(115, 20, 63, 0.5), rgba(72, 55, 12, 0.31)
+    ),
+    $ink;
+  background-repeat: repeat, no-repeat, no-repeat;
+}
+
+// 流體背景畫布：固定鋪滿整個視窗、墊在所有內容後面
+#fluid-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none; // 滑鼠事件交給頁面本身，背景用 window 監聽
+}
+
+// data-icon 容器內的 Material Symbols SVG：繼承文字大小與顏色
+[data-icon] svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}

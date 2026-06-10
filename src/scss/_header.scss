@@ -1,0 +1,112 @@
+@use 'variables' as *;
+
+// ===== 頁首（移植舊站，改為 class 切換顯示/隱藏）=====
+#topbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.5rem;
+  z-index: 100;
+  transition: transform 0.5s ease;
+
+  // 往下捲動時整條往上收（由 motion.js 切換）
+  &.is-hidden {
+    transform: translateY(-100%);
+  }
+
+  @media (max-width: 992px) {
+    font-size: 1.2rem;
+  }
+
+  .logo img {
+    height: 150px;
+
+    @media (max-width: 992px) {
+      height: 120px;
+    }
+
+    @media (max-width: 640px) {
+      height: 100px;
+    }
+  }
+
+  .nav-box {
+    display: flex;
+    align-items: center;
+
+    @media (max-width: 640px) {
+      align-items: start;
+      margin-top: 30px;
+      padding-right: 16px;
+    }
+  }
+
+  // 漢堡按鈕：桌機隱藏，手機顯示三條線
+  .hamburger {
+    display: none;
+
+    @media (max-width: 640px) {
+      display: block;
+
+      .bar {
+        display: block;
+        width: 25px;
+        height: 3px;
+        background-color: $pink;
+        margin: 5px auto;
+        transition: 0.4s;
+      }
+
+      // 點開後 三 變 X
+      &.is-active .bar:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+      }
+
+      &.is-active .bar:nth-child(2) {
+        opacity: 0;
+      }
+
+      &.is-active .bar:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+      }
+    }
+  }
+
+  .menu {
+    display: flex;
+    padding: 30px;
+
+    @media (max-width: 992px) {
+      padding: 0;
+    }
+
+    a {
+      display: block;
+      padding: 30px;
+      font-weight: 900;
+      color: $pink;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: $white;
+      }
+
+      @media (max-width: 640px) {
+        padding: 16px;
+      }
+    }
+
+    // 手機版：預設收起，.is-open 時垂直展開
+    @media (max-width: 640px) {
+      display: none;
+      flex-direction: column;
+      align-items: end;
+
+      &.is-open {
+        display: flex;
+      }
+    }
+  }
+}

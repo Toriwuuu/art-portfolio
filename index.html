@@ -1,16 +1,92 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant-TW">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TORI - Art Portfolio</title>
+  <title>Tori's Artwork</title>
+  <link rel="icon" href="/img/logo.svg">
   <script type="module" src="/src/main.js"></script>
 </head>
+
 <body>
+  <!-- 3D 流體背景畫布：固定在最底層，M4 由 fluid-bg.js 接手 -->
+  <canvas id="fluid-bg" aria-hidden="true"></canvas>
+
+  <header id="topbar">
+    <div class="logo">
+      <a href="#hero" aria-label="回到頁首"><img src="/img/title.svg" alt="Tori's Artwork"></a>
+    </div>
+    <div class="nav-box">
+      <button class="hamburger" type="button" aria-label="開啟選單" aria-expanded="false">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+      <nav>
+        <ul class="menu">
+          <li><a href="#illustration">ILLUSTRATION</a></li>
+          <li><a href="#plastic">PLASTIC ART</a></li>
+          <li><a href="#contact">CONTACT</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
   <main>
+    <!-- 開場：流體背景在這一區火力全開 -->
     <section id="hero">
-      <h1>TORI</h1>
+      <div class="hero-inner">
+        <p class="hero-kicker">ILLUSTRATION / PLASTIC ART</p>
+        <h1 class="hero-title">TORI'S<br>ARTWORK</h1>
+        <p class="hero-intro">Hi, I'm Tori. Welcome to my little dark gallery.</p>
+      </div>
+      <a class="scroll-hint" href="#illustration" aria-label="往下捲動看作品" data-icon="scrollHint"></a>
+    </section>
+
+    <!-- 插畫：暗室畫廊，單欄大圖 -->
+    <section id="illustration" class="gallery-section">
+      <header class="section-head">
+        <h2 class="section-title">ILLUSTRATION</h2>
+      </header>
+      <!-- M2 由 gallery.js 依 data.js 填入作品 -->
+      <div class="works" data-gallery="illustration"></div>
+    </section>
+
+    <!-- 立體作品：依年份分組的縮圖牆 -->
+    <section id="plastic" class="gallery-section">
+      <header class="section-head">
+        <h2 class="section-title">PLASTIC ART</h2>
+      </header>
+      <!-- M2 由 gallery.js 依 data.js 填入年份群組 -->
+      <div class="years" data-gallery="plastic"></div>
     </section>
   </main>
+
+  <footer id="contact">
+    <div class="marquee">
+      <div class="marquee-content">
+        <span>Hi, I'm Tori. Welcome to my website. Here you can see some illustrations and some
+          plastic arts. Have a nice day!</span>
+        <span aria-hidden="true">Hi, I'm Tori. Welcome to my website. Here you can see some illustrations and some
+          plastic arts. Have a nice day!</span>
+      </div>
+    </div>
+    <div class="contactTable">
+      <div class="contactText">CONTACT
+        <nav class="contactIcon" aria-label="社群連結">
+          <ul class="icon">
+            <li><a href="https://www.instagram.com/tori20305/" aria-label="Instagram"><img src="/img/ig.svg"
+                  alt="Instagram"></a></li>
+            <li><a href="https://www.facebook.com/tori.9672/" aria-label="Facebook"><img src="/img/fb.svg"
+                  alt="Facebook"></a></li>
+            <li><a href="https://x.com/tori20305" aria-label="X"><img src="/img/twitter.svg" alt="X"></a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <button class="topbtn" type="button">TOP<span class="topbtn-icon" data-icon="top"></span></button>
+  </footer>
 </body>
+
 </html>

@@ -1,0 +1,60 @@
+@use 'variables' as *;
+
+// ===== 開場區：流體背景的主舞台 =====
+#hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+
+  .hero-kicker {
+    font-weight: 200;
+    letter-spacing: 0.5em;
+    text-indent: 0.5em; // 抵銷最後一個字的字距，讓置中視覺平衡
+    color: $lightg;
+    margin-bottom: 24px;
+
+    @media (max-width: 640px) {
+      font-size: 0.8rem;
+      letter-spacing: 0.3em;
+      text-indent: 0.3em;
+    }
+  }
+
+  .hero-title {
+    font-weight: 900;
+    font-size: clamp(4rem, 12vw, 10rem);
+    line-height: 0.95;
+    color: $white;
+    // 桃紅柔光：讓標題像在暗室裡發光
+    text-shadow: 0 0 60px rgba(233, 49, 204, 0.45);
+  }
+
+  .hero-intro {
+    font-style: italic;
+    font-weight: 200;
+    color: $lightg;
+    margin-top: 32px;
+
+    @media (max-width: 640px) {
+      font-size: 0.9rem;
+    }
+  }
+
+  // 往下捲動提示（M5 會加上漂浮動畫）
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    font-size: 3rem;
+    color: $pink;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: $white;
+    }
+  }
+}
