@@ -35,6 +35,12 @@ footer {
       animation: marquee 40s linear infinite;
       white-space: nowrap;
 
+      // 使用者偏好減少動態：跑馬燈停住
+      // （寫在同一層選擇器內，特定性才壓得過上面的 animation）
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
+
       span {
         display: inline-block;
         padding: 0 50px;
@@ -50,13 +56,6 @@ footer {
 
     to {
       transform: translateX(-50%);
-    }
-  }
-
-  // 偏好減少動態：跑馬燈停住
-  @media (prefers-reduced-motion: reduce) {
-    .marquee-content {
-      animation: none;
     }
   }
 

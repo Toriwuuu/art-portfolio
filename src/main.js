@@ -4,7 +4,6 @@ import { initIcons } from './js/icons.js'
 import { initMotion } from './js/motion.js'
 import { initGallery } from './js/gallery.js'
 import { open as openLightbox } from './js/lightbox.js'
-import { initFluidBg } from './js/fluid-bg.js'
 
 initIcons()   // 把 data-icon 佔位填入 Material Symbols SVG
 
@@ -13,5 +12,7 @@ initGallery(openLightbox)
 
 initMotion()  // header 隱現、漢堡選單、GSAP 漂浮 / 視差 / 進場
 
-// 3D 流體背景（不支援 WebGL 或使用者偏好減少動態時自動跳過）
-initFluidBg()
+// 3D 流體背景（不支援 WebGL 或使用者偏好減少動態時自動跳過）。
+// 用動態載入（dynamic import）：Three.js 比較大，拆成獨立檔案之後背景下載，
+// 頁面內容不用等它就能先互動
+import('./js/fluid-bg.js').then(({ initFluidBg }) => initFluidBg())

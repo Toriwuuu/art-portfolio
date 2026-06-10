@@ -9,15 +9,19 @@ import { icons } from './icons.js'
 const COLLAPSE_LIMIT = 8
 
 // 產生一張作品的 <figure> HTML
-function workHTML({ src, title, eager = false }) {
+function workHTML({ src, title, w, h, eager = false }) {
   // 前幾張用 eager 優先載入，其餘 lazy（捲到附近才下載）
   const loadAttr = eager
     ? 'loading="eager" fetchpriority="high"'
     : 'loading="lazy"'
 
+  // 有提供尺寸就寫進 width/height：圖片還沒載入前瀏覽器就會留好位置，
+  // 捲動時版面不會因為圖片陸續載入而跳動
+  const sizeAttr = w && h ? `width="${w}" height="${h}"` : ''
+
   return `
     <figure class="work">
-      <img src="${src}" alt="${title}" ${loadAttr} decoding="async">
+      <img src="${src}" alt="${title}" ${loadAttr} ${sizeAttr} decoding="async">
       ${title ? `<figcaption>${title}</figcaption>` : ''}
     </figure>
   `
@@ -27,7 +31,13 @@ function workHTML({ src, title, eager = false }) {
 function renderIllustrations(container, onWorkClick) {
   const html = illustrations
     .map((item, i) =>
-      workHTML({ src: illusSrc(item.file), title: item.title, eager: i === 0 })
+      workHTML({
+        src: illusSrc(item.file),
+        title: item.title,
+        w: item.w,
+        h: item.h,
+        eager: i === 0,
+      })
     )
     .join('')
   container.insertAdjacentHTML('beforeend', html)

@@ -2,20 +2,22 @@
 // 要新增/移除作品，直接改這個檔案就好，畫面會自動跟著更新。
 // 圖片放在 public/img/ 底下。
 
-// 插畫（首頁 ILLUSTRATION 區，依這裡的順序展示）
+// 插畫（首頁 ILLUSTRATION 區，依這裡的順序展示）。
+// w / h 是圖片的像素尺寸：先告訴瀏覽器圖有多大，
+// lazy 載入時版面才不會跳動（圖還沒下載就先把位置留好）
 export const illustrations = [
-  { file: 'dont-wake-up.jpg', title: "Don't Wake Up" },
-  { file: 'two.jpg', title: 'Two' },
-  { file: 'always-cow.jpg', title: 'Always Cow' },
-  { file: 'calling.jpg', title: 'Calling' },
-  { file: 'chaos.jpg', title: 'Chaos' },
-  { file: 'escape.jpg', title: 'Escape' },
-  { file: 'face.jpg', title: 'Face' },
-  { file: 'missing-call.jpg', title: 'Missing Call' },
-  { file: 'moai.jpg', title: 'Moai' },
-  { file: 'rainy-night.jpg', title: 'Rainy Night' },
-  { file: 'staircase.jpg', title: 'Staircase' },
-  { file: 'star-tears.jpg', title: 'Star Tears' },
+  { file: 'dont-wake-up.jpg', title: "Don't Wake Up", w: 2360, h: 1640 },
+  { file: 'two.jpg', title: 'Two', w: 1640, h: 1612 },
+  { file: 'always-cow.jpg', title: 'Always Cow', w: 1640, h: 2360 },
+  { file: 'calling.jpg', title: 'Calling', w: 2360, h: 1640 },
+  { file: 'chaos.jpg', title: 'Chaos', w: 1640, h: 2360 },
+  { file: 'escape.jpg', title: 'Escape', w: 2360, h: 1640 },
+  { file: 'face.jpg', title: 'Face', w: 1640, h: 2360 },
+  { file: 'missing-call.jpg', title: 'Missing Call', w: 2360, h: 1640 },
+  { file: 'moai.jpg', title: 'Moai', w: 1640, h: 2360 },
+  { file: 'rainy-night.jpg', title: 'Rainy Night', w: 2360, h: 1640 },
+  { file: 'staircase.jpg', title: 'Staircase', w: 2360, h: 1640 },
+  { file: 'star-tears.jpg', title: 'Star Tears', w: 1640, h: 2360 },
 ]
 
 // 立體作品（依年份，新的在前）
