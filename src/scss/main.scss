@@ -1,8 +1,5 @@
 // ===== 主樣式入口：只負責組合各個 partial =====
 @use 'reset';
 @use 'base';
-@use 'header';
-@use 'hero';
-@use 'gallery';
 @use 'lightbox';
-@use 'footer';
+@use 'fallback';

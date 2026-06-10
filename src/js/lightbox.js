@@ -1,15 +1,22 @@
-// ===== 燈箱（純 JS，取代 jQuery + Lightbox2）=====
-// 用法：open(作品清單, 起始索引)。
-// 支援：上一張/下一張、Esc 關閉、方向鍵、點黑底關閉、預載下一張。
+// ===== 燈箱 v2 =====
+// 用法：open(work)——傳入 data.js 的一件作品。
+// 多圖作品：原圖以「直欄」堆疊，在燈箱內捲動瀏覽（全站唯一可捲動的地方）。
+// 關閉方式：右上 X、Esc、點黑底。
 
+import { fullSrc } from './data.js'
 import { icons } from './icons.js'
 
-let overlay = null      // 燈箱外層（只建立一次，重複使用）
-let currentList = []    // 目前展示中的作品清單
-let currentIndex = 0
-let lastFocused = null  // 開燈箱前的焦點元素，關閉後還回去
+let overlay = null     // 燈箱外層（只建立一次，重複使用）
+let lastFocused = null // 開燈箱前的焦點元素，關閉時還回去
 
-// 第一次使用時把燈箱的 DOM 加進頁面
+// 開／關時可掛場景的暫停與恢復（scene.js 會註冊，省電用）
+let onOpenCallback = null
+let onCloseCallback = null
+export function setSceneHooks({ onOpen, onClose }) {
+  onOpenCallback = onOpen
+  onCloseCallback = onClose
+}
+
 function buildOverlay() {
   overlay = document.createElement('div')
   overlay.className = 'lightbox'
@@ -20,67 +27,61 @@ function buildOverlay() {
 
   overlay.innerHTML = `
     <button class="lightbox-close" type="button" aria-label="關閉">${icons.close}</button>
-    <button class="lightbox-prev" type="button" aria-label="上一張">${icons.prev}</button>
-    <figure class="lightbox-figure">
-      <img class="lightbox-img" alt="">
-      <figcaption class="lightbox-caption"></figcaption>
-    </figure>
-    <button class="lightbox-next" type="button" aria-label="下一張">${icons.next}</button>
+    <div class="lightbox-scroll" tabindex="0"></div>
   `
   document.body.appendChild(overlay)
 
   overlay.querySelector('.lightbox-close').addEventListener('click', close)
-  overlay.querySelector('.lightbox-prev').addEventListener('click', () => step(-1))
-  overlay.querySelector('.lightbox-next').addEventListener('click', () => step(1))
 
-  // 點黑底（不是圖片或按鈕）也能關閉
+  // 點黑底（不是圖片、標題或按鈕）也能關閉
   overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) close()
+    if (e.target === overlay || e.target.classList.contains('lightbox-scroll')) close()
   })
 
-  // 鍵盤操作
   document.addEventListener('keydown', (e) => {
-    if (overlay.hidden) return
-    if (e.key === 'Escape') close()
-    if (e.key === 'ArrowLeft') step(-1)
-    if (e.key === 'ArrowRight') step(1)
+    if (!overlay.hidden && e.key === 'Escape') close()
   })
 }
 
-// 顯示第 index 張，並偷偷預載下一張讓切換更順
-function show(index) {
-  // 頭尾相接：最後一張的下一張回到第一張
-  currentIndex = (index + currentList.length) % currentList.length
-  const item = currentList[currentIndex]
-
-  const img = overlay.querySelector('.lightbox-img')
-  img.src = item.src
-  img.alt = item.title || ''
-  overlay.querySelector('.lightbox-caption').textContent = item.title || ''
-
-  const next = currentList[(currentIndex + 1) % currentList.length]
-  if (next) new Image().src = next.src
-}
-
-function step(dir) {
-  show(currentIndex + dir)
-}
-
-export function open(list, index) {
+export function open(work) {
   if (!overlay) buildOverlay()
 
-  currentList = list
   lastFocused = document.activeElement
 
-  show(index)
+  // 直欄內容：標題 + 該作品所有原圖。
+  // 第一張優先載入，其餘 lazy（捲到才下載）；
+  // 插畫有提供原圖尺寸，先寫進 width/height 預留位置避免捲動時跳動
+  const sizeAttr = work.w && work.h ? `width="${work.w}" height="${work.h}"` : ''
+  const imgs = work.files
+    .map((file, i) => {
+      const loadAttr = i === 0
+        ? 'fetchpriority="high"'
+        : 'loading="lazy"'
+      return `
+        <figure>
+          <img src="${fullSrc(work, file)}" alt="${work.title}" ${loadAttr} ${sizeAttr} decoding="async">
+        </figure>
+      `
+    })
+    .join('')
+
+  overlay.querySelector('.lightbox-scroll').innerHTML = `
+    <h2 class="lightbox-title">${work.title}</h2>
+    ${imgs}
+  `
+
   overlay.hidden = false
-  document.body.style.overflow = 'hidden' // 鎖住背後頁面的捲動
+  overlay.querySelector('.lightbox-scroll').scrollTop = 0
   overlay.querySelector('.lightbox-close').focus()
+  onOpenCallback?.()
 }
 
 function close() {
   overlay.hidden = true
-  document.body.style.overflow = ''
-  // 把焦點還給開燈箱前的元素（無障礙基本功）
   if (lastFocused) lastFocused.focus()
+  onCloseCallback?.()
+}
+
+export function isOpen() {
+  return !!overlay && !overlay.hidden
 }

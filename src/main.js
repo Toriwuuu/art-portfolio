@@ -1,18 +1,27 @@
-// ===== 入口檔：載入樣式，依序初始化各模組 =====
+// ===== 入口檔 =====
+// 偵測 WebGL：可用 → 載入 3D 場景（整個網站就是一個場景）；
+// 不可用 → 退回縮圖牆。網址加 ?fallback=1 可以強制測試備案版。
+
 import './scss/main.scss'
 import { initIcons } from './js/icons.js'
-import { initMotion } from './js/motion.js'
-import { initGallery } from './js/gallery.js'
-import { open as openLightbox } from './js/lightbox.js'
 
-initIcons()   // 把 data-icon 佔位填入 Material Symbols SVG
+initIcons()
 
-// 先渲染畫廊（動態層要等作品 DOM 存在才能掛進場動畫）
-initGallery(openLightbox)
+// 試著建立 WebGL context 來判斷支不支援
+function webglAvailable() {
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(canvas.getContext('webgl2') || canvas.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
 
-initMotion()  // header 隱現、漢堡選單、GSAP 漂浮 / 視差 / 進場
+const forceFallback = new URLSearchParams(location.search).has('fallback')
 
-// 3D 流體背景（不支援 WebGL 或使用者偏好減少動態時自動跳過）。
-// 用動態載入（dynamic import）：Three.js 比較大，拆成獨立檔案之後背景下載，
-// 頁面內容不用等它就能先互動
-import('./js/fluid-bg.js').then(({ initFluidBg }) => initFluidBg())
+if (!forceFallback && webglAvailable()) {
+  // 3D 場景比較大（含 Three.js），用動態載入：下載完才啟動
+  import('./js/scene.js').then(({ initScene }) => initScene())
+} else {
+  import('./js/fallback.js').then(({ initFallback }) => initFallback())
+}

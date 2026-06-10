@@ -9,12 +9,13 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^7.0.0",
-    "sass-embedded": "^1.89.0"
+    "sass-embedded": "^1.89.0",
+    "vite": "^7.0.0"
   },
   "dependencies": {
-    "three": "^0.182.0",
+    "@material-symbols/svg-400": "^0.36.0",
+    "@pmndrs/vanilla": "^1.25.0",
     "gsap": "^3.13.0",
-    "@material-symbols/svg-400": "^0.36.0"
+    "three": "^0.182.0"
   }
 }

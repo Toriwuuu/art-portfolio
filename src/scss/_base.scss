@@ -1,8 +1,7 @@
 @use 'variables' as *;
 
 // ===== 字型 =====
-// 修正舊站 bug：原本兩個 src 寫在同一個 @font-face 裡，italic 會蓋掉 regular。
-// 改成同一個家族名稱、用 font-style 區分，weight 100-900 由變體字型涵蓋。
+// 同一個家族名稱、用 font-style 區分 regular / italic
 @font-face {
   font-family: 'Chivo';
   src: url('../assets/font/Chivo-VariableFont_wght.ttf') format('truetype');
@@ -20,6 +19,13 @@
 }
 
 // ===== 全站基礎 =====
+// v3 是單屏 3D 場景：頁面本身不捲動（唯一能捲的是燈箱內部）
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family:
     'Chivo',
@@ -27,8 +33,7 @@ body {
     'PingFang TC', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
   color: $white;
 
-  // 雜訊 + 深色漸層：沿用舊站氛圍。
-  // 這同時是 WebGL 不可用時的備案背景（流體背景畫不出來也不會變白頁）
+  // 雜訊 + 深色漸層：3D 場景載入前的底色，也是無 WebGL 時的備案背景
   background:
     url('../assets/noise.png'),
     linear-gradient(
@@ -40,14 +45,30 @@ body {
   background-repeat: repeat, no-repeat, no-repeat;
 }
 
-// 流體背景畫布：固定鋪滿整個視窗、墊在所有內容後面
-#fluid-bg {
+// 3D 場景畫布：鋪滿整個視窗
+// touch-action: none 讓手機的拖曳手勢交給我們的旋轉控制，不觸發頁面捲動
+#stage {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
-  pointer-events: none; // 滑鼠事件交給頁面本身，背景用 window 監聽
+  touch-action: none;
+}
+
+// 左上角 logo
+.brand {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 10;
+
+  img {
+    height: 72px;
+
+    @media (max-width: 640px) {
+      height: 56px;
+    }
+  }
 }
 
 // data-icon 容器內的 Material Symbols SVG：繼承文字大小與顏色

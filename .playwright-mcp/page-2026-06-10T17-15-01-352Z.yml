@@ -1,0 +1,124 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e3]:
+    - list [ref=e4]:
+      - listitem [ref=e5]:
+        - link "cables start page" [ref=e6] [cursor=pointer]:
+          - /url: /home
+      - listitem [ref=e7]:
+        - link "Explore" [ref=e8] [cursor=pointer]:
+          - /url: /patches
+          - text: Explore
+      - listitem [ref=e10]:
+        - generic [ref=e11] [cursor=pointer]: Learn
+      - listitem [ref=e13]:
+        - generic [ref=e14] [cursor=pointer]: Community
+    - list [ref=e16]:
+      - listitem [ref=e17]:
+        - link "Login" [ref=e18] [cursor=pointer]:
+          - /url: /login
+      - listitem [ref=e19]:
+        - link "Register" [ref=e20] [cursor=pointer]:
+          - /url: /signup
+  - generic [ref=e21]:
+    - generic [ref=e23]:
+      - iframe [ref=e27]:
+        
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - heading "Project Sphere" [level=3] [ref=e32]
+          - generic [ref=e40]: "51"
+        - generic [ref=e45]:
+          - generic [ref=e49]:
+            - generic [ref=e50]:
+              - text: by
+              - link "Tibbrs" [ref=e51] [cursor=pointer]:
+                - /url: /user/Tibbrs
+            - generic [ref=e52]: Published Sep 13, 2025 at 00:34
+          - link "Open In Editor" [ref=e54] [cursor=pointer]:
+            - /url: /edit/tUFtjW
+            - generic [ref=e55]: Open In Editor
+        - paragraph [ref=e59]:
+          - text: "Sphere of assets. Using Fibonacci sphere points by NicolasW. Displays a loader sphere, if the assets load slowly. used here:"
+          - link "https://portfolio.lauritzbaier.de/" [ref=e60] [cursor=pointer]:
+            - /url: https://portfolio.lauritzbaier.de/
+        - generic [ref=e63]:
+          - link "sphere" [ref=e64] [cursor=pointer]:
+            - /url: /tag/sphere
+          - link "images" [ref=e65] [cursor=pointer]:
+            - /url: /tag/images
+          - link "rotation" [ref=e66] [cursor=pointer]:
+            - /url: /tag/rotation
+        - generic [ref=e69]:
+          - link "licence info Attribution-NoDerivs" [ref=e70] [cursor=pointer]:
+            - /url: https://creativecommons.org/licenses/by-nd/4.0/
+          - generic [ref=e74]:
+            - 'heading "Licence: Attribution-NoDerivs" [level=3] [ref=e75]':
+              - text: "Licence:"
+              - link "Attribution-NoDerivs" [ref=e76] [cursor=pointer]:
+                - /url: https://creativecommons.org/licenses/by-nd/4.0/
+            - text: Commercial use ok, cannot share remix, must credit the author, can remix and reuse this work.
+    - generic [ref=e79]:
+      - generic [ref=e80]:
+        - generic [ref=e82]:
+          - link "keepitvisual" [ref=e83] [cursor=pointer]:
+            - /url: /user/keepitvisual
+          - generic [ref=e84]: Sep 17, 2025 at 02:48
+        - paragraph [ref=e86]: Not heard of a Fibonacci Sphere before. Nice one!! One thing you could if you're worried about load times is make a 6x6 grid of your content. Then load 1 video and use your basic materials repeat and texture offset to position each tile ;)
+      - generic [ref=e87]:
+        - generic [ref=e89]:
+          - link "Tibbrs" [ref=e90] [cursor=pointer]:
+            - /url: /user/Tibbrs
+          - generic [ref=e91]: Sep 17, 2025 at 21:24
+        - paragraph [ref=e93]: "@keepitvisual Thanks for the tip! That's smart. Actually after hosting it on Netlify, the asset download speed was quick enough. On the final website I almost never see the loader."
+    - heading "More patches made by cables users" [level=3] [ref=e97]
+    - generic [ref=e99]:
+      - heading "what is cables?" [level=4] [ref=e101]
+      - text: Cables is a tool for creating beautiful interactive content. With an easy to navigate interface and real time visuals, it allows for rapid prototyping and fast adjustments.
+      - text: cables is free to use!
+      - link "Register" [ref=e102] [cursor=pointer]:
+        - /url: /signup
+  - contentinfo [ref=e103]:
+    - generic [ref=e104]:
+      - generic [ref=e105]:
+        - list
+      - list [ref=e107]:
+        - listitem [ref=e108]:
+          - link "About" [ref=e109] [cursor=pointer]:
+            - /url: /about
+        - listitem [ref=e110]:
+          - link "❤️ Support Cables" [ref=e111] [cursor=pointer]:
+            - /url: /support
+        - listitem [ref=e112]: Contact
+        - listitem [ref=e113]:
+          - link "Imprint / Privacy" [ref=e114] [cursor=pointer]:
+            - /url: /imprint
+        - listitem [ref=e115]:
+          - link "Made with cables" [ref=e116] [cursor=pointer]:
+            - /url: /made-with-cables
+    - generic [ref=e117]:
+      - generic [ref=e118]:
+        - link "undev logo" [ref=e119] [cursor=pointer]:
+          - /url: https://undev.studio
+        - text: cables is open source software, made in europe by
+        - link "undefined development UG" [ref=e121] [cursor=pointer]:
+          - /url: https://undev.studio
+      - list [ref=e123]:
+        - listitem [ref=e124]:
+          - link "cables on mastodon" [ref=e125] [cursor=pointer]:
+            - /url: https://bsky.app/profile/cablesgl.bsky.social
+        - listitem [ref=e126]:
+          - link "cables on mastodon" [ref=e127] [cursor=pointer]:
+            - /url: https://mastodon.social/@cables_gl
+        - listitem [ref=e128]:
+          - link "cables on instagram" [ref=e129] [cursor=pointer]:
+            - /url: https://www.instagram.com/cables_gl
+        - listitem [ref=e130]:
+          - link "cables on youtube" [ref=e131] [cursor=pointer]:
+            - /url: https://www.youtube.com/cables_gl
+        - listitem [ref=e132]:
+          - link [ref=e133] [cursor=pointer]:
+            - /url: /rss.xml
+  - paragraph [ref=e135]:
+    - text: cables.gl uses
+    - strong [ref=e136]: only functional cookies
+    - text: to ensure that everything works fine for you. If you continue we’ll assume that you are happy to receive these cookies on cables.
