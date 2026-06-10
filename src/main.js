@@ -7,10 +7,11 @@ import { open as openLightbox } from './js/lightbox.js'
 import { initFluidBg } from './js/fluid-bg.js'
 
 initIcons()   // 把 data-icon 佔位填入 Material Symbols SVG
-initMotion()  // header 隱現、漢堡選單、TOP 按鈕
 
-// 渲染兩個畫廊區，點擊作品開燈箱
+// 先渲染畫廊（動態層要等作品 DOM 存在才能掛進場動畫）
 initGallery(openLightbox)
+
+initMotion()  // header 隱現、漢堡選單、GSAP 漂浮 / 視差 / 進場
 
 // 3D 流體背景（不支援 WebGL 或使用者偏好減少動態時自動跳過）
 initFluidBg()
