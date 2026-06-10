@@ -168,5 +168,11 @@
       color: $ink;
       background: $pink;
     }
+
+    svg {
+      width: 1.2em;
+      height: 1.2em;
+      fill: currentColor;
+    }
   }
 }
