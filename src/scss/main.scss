@@ -1,0 +1,6 @@
+// ===== 主樣式入口：只負責組合各個 partial =====
+@use 'reset';
+@use 'base';
+@use 'lightbox';
+@use 'fallback';
+@use 'gui';

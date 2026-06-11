@@ -2,211 +2,30 @@
 <html lang="zh-Hant-TW">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tori's ArtWork</title>
-    <link rel="icon" href="./img/logo.svg">
-    <link rel="stylesheet" href="./css/sytle.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tori's Artwork</title>
+  <meta name="description" content="Tori 的藝術作品集：插畫與立體裝置作品（2017-2023）。">
+  <meta name="theme-color" content="#0A0A0D">
+  <meta property="og:title" content="Tori's Artwork">
+  <meta property="og:description" content="Tori 的藝術作品集：插畫與立體裝置作品（2017-2023）。">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/img/illus/dont-wake-up.jpg">
+  <link rel="icon" href="/img/logo.svg">
+  <script type="module" src="/src/main.js"></script>
 </head>
 
 <body>
-    <header id="topbar">
-        <h1 class="logo">
-            <a href="index.html"><img src="./img/title.svg" alt="Tori's Artwork"></a>
-        </h1>
-        <div class="nav-box">
+  <!-- 全站唯一內容：3D 場景畫布（玻璃流體 + 作品球）-->
+  <canvas id="stage"></canvas>
 
-            <button class="hamburger">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </button>
-            <nav>
-                <ul class="menu hide">
-                    <li><a href="index.html">DIGITAL ART</a></li>
-                    <li><a href="plastic.html">PLASTIC ART</a></li>
-                    <li><a href="shop.html">SHOP</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+  <!-- 左上角 logo（唯一保留的品牌元素）-->
+  <a class="brand" href="./" aria-label="Tori's Artwork">
+    <img src="/img/title.svg" alt="Tori's Artwork">
+  </a>
 
-    <section id="digitalArt">
-        <div class="cd">
-            <div class="pin"><img src="./img/playeer.png" alt="" class="pinrotate"></div>
-            <div class="circle"><img src="./img/us.png" alt="" class="rotate"></div>
-        </div>
-        <div class="photo">
-            <div class="carousel">
-                <div class="mask"><a href="./img/illus/dont-wake-up.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/dont-wake-up.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/two.jpg" data-lightbox="image-1"><img src="./img/illus/two.jpg"
-                            alt=""></a></div>
-                <div class="mask"><a href="./img/illus/always-cow.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/always-cow.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/calling.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/calling.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/chaos.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/chaos.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/escape.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/escape.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/face.jpg" data-lightbox="image-1"><img src="./img/illus/face.jpg"
-                            alt=""></a></div>
-                <div class="mask"><a href="./img/illus/missing-call.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/missing-call.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/moai.jpg" data-lightbox="image-1"><img src="./img/illus/moai.jpg"
-                            alt=""></a></div>
-                <div class="mask"><a href="./img/illus/rainy-night.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/rainy-night.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/staircase.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/staircase.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/star-tears.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/star-tears.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/dont-wake-up.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/dont-wake-up.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/two.jpg" data-lightbox="image-1"><img src="./img/illus/two.jpg"
-                            alt=""></a></div>
-                <div class="mask"><a href="./img/illus/always-cow.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/always-cow.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/calling.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/calling.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/chaos.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/chaos.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/escape.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/escape.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/face.jpg" data-lightbox="image-1"><img src="./img/illus/face.jpg"
-                            alt=""></a></div>
-                <div class="mask"><a href="./img/illus/missing-call.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/missing-call.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/moai.jpg" data-lightbox="image-1"><img src="./img/illus/moai.jpg"
-                            alt=""></a></div>
-                <div class="mask"><a href="./img/illus/rainy-night.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/rainy-night.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/staircase.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/staircase.jpg" alt=""></a></div>
-                <div class="mask"><a href="./img/illus/star-tears.jpg" data-lightbox="image-1"><img
-                            src="./img/illus/star-tears.jpg" alt=""></a></div>
-
-
-            </div>
-        </div>
-    </section>
-
-    <footer id="contact">
-        <div class="marquee">
-            <div class="marquee-content">
-                <span>
-                    Hi, I'm Tori. Welcome to my website. Here you can see some illustrations and some plastic arts. You
-                    can also buy my works in the SHOP. Have a nice day!</span>
-
-                <span>
-                    Hi, I'm Tori. Welcome to my website. Here you can see some illustrations and some plastic arts. You
-                    can also buy my works in the SHOP. Have a nice day!</span>
-
-                <span>
-                    Hi, I'm Tori. Welcome to my website. Here you can see some illustrations and some plastic arts. You
-                    can also buy my works in the SHOP. Have a nice day!</span>
-
-                <span>
-                    Hi, I'm Tori. Welcome to my website. Here you can see some illustrations and some plastic arts. You
-                    can also buy my works in the SHOP. Have a nice day!</span>
-                <span>
-                    Hi, I'm Tori. Welcome to my website. Here you can see some illustrations and some plastic arts. You
-                    can also buy my works in the SHOP. Have a nice day!</span>
-
-
-            </div>
-        </div>
-        <div class="contactTable">
-            <div class="contactText">CONTACT
-                <nav class="contactIcon">
-                    <ul class="icon">
-                        <li><a href="https://www.instagram.com/tori20305/" class="icon-ig"></a></li>
-                        <li><a href="https://www.facebook.com/tori.9672/" class="icon-fb"></a></li>
-                        <li><a href="https://x.com/tori20305" class="icon-twitter"></a></li>
-                    </ul>
-                </nav>
-            </div>
-
-        </div>
-
-        <div class="topbtn">TOP<svg width="85" height="43" viewBox="0 0 85 43" fill="none"
-                xmlns="http://www.w3.org/2000/svg">
-                <path
-                    d="M83.129 40.4644C81.9307 41.4945 80.3056 42.0732 78.6111 42.0732C76.9166 42.0732 75.2915 41.4945 74.0932 40.4644L42.4614 13.2638L10.8296 40.4644C9.62443 41.4653 8.01023 42.0192 6.33473 42.0067C4.65923 41.9942 3.05647 41.4163 1.87166 40.3974C0.686852 39.3786 0.0148087 38.0004 0.000244141 36.5596C-0.0143127 35.1188 0.629791 33.7307 1.79382 32.6943L37.9435 1.60873C39.1419 0.578568 40.767 -0.000148773 42.4614 -0.000148773C44.1559 -0.000148773 45.781 0.578568 46.9793 1.60873L83.129 32.6943C84.327 33.7248 85 35.1223 85 36.5793C85 38.0364 84.327 39.4339 83.129 40.4644Z"
-                    fill="white" />
-            </svg>
-        </div>
-
-    </footer>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
-    <!-- 在你的 HTML 文件中引入 jQuery UI 库 -->
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-
-    <script>
-
-        $(document).ready(function () {
-
-            // 漢堡
-            $('.hamburger').click(function () {
-                // 交替 三 跟 X
-                $(this).toggleClass('is-active');
-                $('.menu').toggleClass('show');
-                $('.menu').toggleClass('hide');
-            });
-
-            // 頁首滾動效果
-            let lastScrollTop = 0;
-            let headerHeight = $('#topbar').outerHeight();
-
-            $(window).scroll(function () {
-                let currentScroll = $(this).scrollTop();
-
-                if (currentScroll > lastScrollTop && currentScroll > headerHeight) {
-                    // 往下滾動且未滾動至頁首，隱藏 header
-                    $('#topbar').css({
-                        'top': -headerHeight + 'vh',
-                        'transition': 'top 1s' // 添加過渡效果
-                    });
-                } else if (currentScroll === 0) {
-                    // 滾動至頁首，顯示 header
-                    $('#topbar').css({
-                        'top': '0',
-                        'transition': 'top 0.3s' // 添加過渡效果
-                    });
-                }
-
-                lastScrollTop = currentScroll;
-            });
-
-
-            /*             // 无缝播放图片
-                        let $carousel = $('.carousel');
-                        let carouselHeight = $carousel.height();
-                        let imageHeight = $('.mask').outerHeight(true);
-                        let totalImages = $('.mask').length;
-                        let imagesToShow = Math.ceil(carouselHeight / imageHeight) + 1;
-            
-                        function duplicateImages() {
-                            let htmlContent = $carousel.html();
-                            let imagesToDuplicate = Math.ceil(imagesToShow / totalImages) * totalImages;
-                            for (let i = 0; i < imagesToDuplicate; i++) {
-                                $carousel.append(htmlContent);
-                            }
-                        }
-            
-                        duplicateImages(); */
-
-
-            $('.topbtn svg').click(function () {
-                $('html, body').animate({ scrollTop: 0 }, 'slow');
-            });
-        });
-
-    </script>
+  <!-- WebGL 不可用時，由 fallback.js 在這裡放縮圖牆 -->
+  <main id="fallback" hidden></main>
 </body>
 
 </html>
