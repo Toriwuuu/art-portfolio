@@ -3,10 +3,12 @@
 // 透過 Vite 的 ?raw 把 SVG 原始碼直接內嵌進 JS。
 // SVG 是 viewBox="0 -960 960 960"，CSS 用 fill: currentColor 繼承文字顏色。
 import close from '@material-symbols/svg-400/rounded/close.svg?raw'
+import tune from '@material-symbols/svg-400/rounded/tune.svg?raw'
 
-// 語意名稱 → 圖示（v3 只剩燈箱的關閉鈕需要圖示）
+// 語意名稱 → 圖示
 export const icons = {
-  close,
+  close, // 關閉燈箱
+  tune,  // 參數面板開關
 }
 
 // 把頁面上所有 <span data-icon="名稱"> 填入對應的 SVG

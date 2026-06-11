@@ -6,8 +6,8 @@ import * as THREE from 'three'
 import gsap from 'gsap'
 import { isOpen as lightboxIsOpen } from './lightbox.js'
 
-// ---------- 可調參數 ----------
-const CONFIG = {
+// ---------- 可調參數（export 讓 GUI 面板可即時調整）----------
+export const CONTROLS_CONFIG = {
   sensitivity: 0.005,  // 拖曳靈敏度（弧度/像素）
   maxTiltX: 0.6,       // 上下傾轉上限（弧度），避免翻過南北極
   damping: 0.95,       // 慣性衰減：每幀(60fps基準)速度乘上這個值
@@ -59,16 +59,16 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
       const dt = Math.max((now - lastMoveTime) / 1000, 0.001)
 
       // 水平拖 → 繞 Y 軸轉；垂直拖 → 繞 X 軸轉（夾在 ±maxTiltX 之間）
-      group.rotation.y += dx * CONFIG.sensitivity
+      group.rotation.y += dx * CONTROLS_CONFIG.sensitivity
       group.rotation.x = THREE.MathUtils.clamp(
-        group.rotation.x + dy * CONFIG.sensitivity,
-        -CONFIG.maxTiltX,
-        CONFIG.maxTiltX
+        group.rotation.x + dy * CONTROLS_CONFIG.sensitivity,
+        -CONTROLS_CONFIG.maxTiltX,
+        CONTROLS_CONFIG.maxTiltX
       )
 
       // 記下這一刻的速度，放開時拿來做慣性滑行
-      velY = (dx * CONFIG.sensitivity) / dt
-      velX = (dy * CONFIG.sensitivity) / dt
+      velY = (dx * CONTROLS_CONFIG.sensitivity) / dt
+      velX = (dy * CONTROLS_CONFIG.sensitivity) / dt
 
       totalMove += Math.abs(dx) + Math.abs(dy)
       lastX = e.clientX
@@ -86,7 +86,7 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
     dragging = false
 
     // 幾乎沒移動 → 視為點擊 → 雷射偵測打到哪張卡
-    if (totalMove < CONFIG.clickThreshold) {
+    if (totalMove < CONTROLS_CONFIG.clickThreshold) {
       pointerNdc.x = (e.clientX / window.innerWidth) * 2 - 1
       pointerNdc.y = -((e.clientY / window.innerHeight) * 2 - 1)
       raycaster.setFromCamera(pointerNdc, camera)
@@ -103,9 +103,9 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
     e.preventDefault()
     idleTimer = 0
     zoomTarget = THREE.MathUtils.clamp(
-      zoomTarget + e.deltaY * CONFIG.zoomStep,
-      CONFIG.zoomMin,
-      CONFIG.zoomMax
+      zoomTarget + e.deltaY * CONTROLS_CONFIG.zoomStep,
+      CONTROLS_CONFIG.zoomMin,
+      CONTROLS_CONFIG.zoomMax
     )
   }, { passive: false })
 
@@ -135,8 +135,8 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
       gsap.to(card.userData.uniforms.uHover, { value: 1, duration: 0.3 })
       if (!reducedMotion) {
         gsap.to(card.scale, {
-          x: card.userData.baseScale.x * CONFIG.hoverScale,
-          y: card.userData.baseScale.y * CONFIG.hoverScale,
+          x: card.userData.baseScale.x * CONTROLS_CONFIG.hoverScale,
+          y: card.userData.baseScale.y * CONTROLS_CONFIG.hoverScale,
           duration: 0.3,
         })
       }
@@ -152,10 +152,10 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
       group.rotation.y += velY * dt
       group.rotation.x = THREE.MathUtils.clamp(
         group.rotation.x + velX * dt,
-        -CONFIG.maxTiltX,
-        CONFIG.maxTiltX
+        -CONTROLS_CONFIG.maxTiltX,
+        CONTROLS_CONFIG.maxTiltX
       )
-      const decay = Math.pow(CONFIG.damping, dt * 60)
+      const decay = Math.pow(CONTROLS_CONFIG.damping, dt * 60)
       velX *= decay
       velY *= decay
     }
@@ -164,9 +164,9 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
     // （使用者偏好減少動態時不自轉）
     if (!reducedMotion) {
       idleTimer += dt
-      const want = !dragging && idleTimer > CONFIG.idleDelay ? 1 : 0
+      const want = !dragging && idleTimer > CONTROLS_CONFIG.idleDelay ? 1 : 0
       autoFactor += (want - autoFactor) * Math.min(dt * 2, 1)
-      group.rotation.y += CONFIG.autoSpeed * autoFactor * dt
+      group.rotation.y += CONTROLS_CONFIG.autoSpeed * autoFactor * dt
     }
 
     // 縮放平滑趨近目標值

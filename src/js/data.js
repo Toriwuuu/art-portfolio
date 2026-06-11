@@ -24,27 +24,19 @@ export const works = [
   { id: 'illus-staircase', type: 'illustration', title: 'Staircase', dir: 'illus', files: ['staircase.jpg'], w: 2360, h: 1640 },
   { id: 'illus-star-tears', type: 'illustration', title: 'Star Tears', dir: 'illus', files: ['star-tears.jpg'], w: 1640, h: 2360 },
 
-  // ---------- 立體作品 24 件 ----------
+  // ---------- 立體作品 12 件 ----------
   // 2023：整檔展覽是同一件作品（9 張）
   {
     id: 'plastic-2023', type: 'plastic', year: 2023, title: '2023', dir: 'plastic/2023',
     files: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg'],
   },
 
-  // 2022：純數字每張獨立一件（13 件）
-  { id: 'plastic-2022-01', type: 'plastic', year: 2022, title: '2022 · 01', dir: 'plastic/2022', files: ['01.jpg'] },
-  { id: 'plastic-2022-02', type: 'plastic', year: 2022, title: '2022 · 02', dir: 'plastic/2022', files: ['02.jpg'] },
-  { id: 'plastic-2022-03', type: 'plastic', year: 2022, title: '2022 · 03', dir: 'plastic/2022', files: ['03.jpg'] },
-  { id: 'plastic-2022-04', type: 'plastic', year: 2022, title: '2022 · 04', dir: 'plastic/2022', files: ['04.jpg'] },
-  { id: 'plastic-2022-05', type: 'plastic', year: 2022, title: '2022 · 05', dir: 'plastic/2022', files: ['05.jpg'] },
-  { id: 'plastic-2022-06', type: 'plastic', year: 2022, title: '2022 · 06', dir: 'plastic/2022', files: ['06.jpg'] },
-  { id: 'plastic-2022-07', type: 'plastic', year: 2022, title: '2022 · 07', dir: 'plastic/2022', files: ['07.jpg'] },
-  { id: 'plastic-2022-10', type: 'plastic', year: 2022, title: '2022 · 10', dir: 'plastic/2022', files: ['10.jpg'] },
-  { id: 'plastic-2022-11', type: 'plastic', year: 2022, title: '2022 · 11', dir: 'plastic/2022', files: ['11.jpg'] },
-  { id: 'plastic-2022-12', type: 'plastic', year: 2022, title: '2022 · 12', dir: 'plastic/2022', files: ['12.jpg'] },
-  { id: 'plastic-2022-13', type: 'plastic', year: 2022, title: '2022 · 13', dir: 'plastic/2022', files: ['13.jpg'] },
-  { id: 'plastic-2022-14', type: 'plastic', year: 2022, title: '2022 · 14', dir: 'plastic/2022', files: ['14.jpg'] },
-  { id: 'plastic-2022-15', type: 'plastic', year: 2022, title: '2022 · 15', dir: 'plastic/2022', files: ['15.jpg'] },
+  // 2022：純數字（01-07、10-15）是同一件作品（13 張）
+  {
+    id: 'plastic-2022-main', type: 'plastic', year: 2022, title: '2022', dir: 'plastic/2022',
+    files: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg', '07.jpg',
+            '10.jpg', '11.jpg', '12.jpg', '13.jpg', '14.jpg', '15.jpg'],
+  },
 
   // 2022：字母系列各一件（4 件）
   {

@@ -1,0 +1,119 @@
+@use 'variables' as *;
+
+// ===== GUI 參數面板 =====
+
+// 右下角的玻璃擬態圓鈕（跟 3D 流體同樣的半透明玻璃語言）
+.gui-toggle {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 150;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+
+  // 玻璃擬態：毛玻璃模糊 + 半透明白 + 細邊框 + 內側高光
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.75);
+  transition: color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+
+  svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+  }
+
+  &:hover {
+    color: $pink;
+    background: rgba(255, 255, 255, 0.14);
+    transform: scale(1.06);
+  }
+
+  &.is-active {
+    color: $pink;
+    background: rgba(233, 49, 204, 0.16);
+  }
+
+  @media (max-width: 640px) {
+    right: 16px;
+    bottom: 16px;
+    width: 46px;
+    height: 46px;
+  }
+}
+
+// 面板容器：Apple 毛玻璃質感
+.gui-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 92px;
+  z-index: 150;
+  width: min(320px, calc(100vw - 32px));
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  border-radius: 16px;
+  background: rgba(28, 28, 32, 0.6);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 24px 64px rgba(0, 0, 0, 0.55);
+
+  &[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    right: 16px;
+    bottom: 74px;
+  }
+
+  // 細的捲軸
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+
+  // ----- Tweakpane 主題覆寫（用它提供的 CSS 變數做成玻璃風）-----
+  --tp-base-background-color: transparent;
+  --tp-base-shadow-color: transparent;
+  --tp-container-background-color: rgba(255, 255, 255, 0.04);
+  --tp-container-background-color-active: rgba(255, 255, 255, 0.1);
+  --tp-container-background-color-focus: rgba(255, 255, 255, 0.08);
+  --tp-container-background-color-hover: rgba(255, 255, 255, 0.07);
+  --tp-container-foreground-color: rgba(255, 255, 255, 0.85);
+  --tp-button-background-color: rgba(255, 255, 255, 0.1);
+  --tp-button-background-color-active: rgba(233, 49, 204, 0.4);
+  --tp-button-background-color-focus: rgba(233, 49, 204, 0.3);
+  --tp-button-background-color-hover: rgba(233, 49, 204, 0.25);
+  --tp-button-foreground-color: rgba(255, 255, 255, 0.9);
+  --tp-groove-foreground-color: rgba(255, 255, 255, 0.18);
+  --tp-input-background-color: rgba(0, 0, 0, 0.28);
+  --tp-input-background-color-active: rgba(0, 0, 0, 0.45);
+  --tp-input-background-color-focus: rgba(0, 0, 0, 0.4);
+  --tp-input-background-color-hover: rgba(0, 0, 0, 0.35);
+  --tp-input-foreground-color: rgba(255, 255, 255, 0.9);
+  --tp-label-foreground-color: rgba(255, 255, 255, 0.55);
+  --tp-monitor-background-color: rgba(0, 0, 0, 0.3);
+  --tp-monitor-foreground-color: rgba(255, 255, 255, 0.7);
+
+  // 面板本體留一點內距，呼吸感
+  .tp-rotv {
+    padding: 6px;
+    font-family: inherit;
+  }
+}

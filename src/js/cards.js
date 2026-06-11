@@ -9,10 +9,10 @@ import { works, thumbSrc } from './data.js'
 
 // ---------- 可調參數 ----------
 export const CARDS_CONFIG = {
-  radius: 3.2,         // 卡片球半徑（桌機）
-  radiusMobile: 2.8,
-  baseHeight: 0.72,    // 卡片基準高度
-  maxWidth: 1.15,      // 卡片寬度上限（橫圖不要太霸道）
+  radius: 3.0,         // 卡片球半徑（桌機）
+  radiusMobile: 2.7,
+  baseHeight: 0.82,    // 卡片基準高度（24 張卡比較疏，可以大一點）
+  maxWidth: 1.3,       // 卡片寬度上限（橫圖不要太霸道）
   fadeIn: 0.6,         // 貼圖載入後的淡入秒數
   carouselEvery: 4,    // 多圖卡每隔幾秒換一張
   crossfade: 0.8,      // 換圖的 crossfade 秒數
@@ -70,7 +70,8 @@ export function createCards({ isMobile, reducedMotion }) {
   const R = isMobile ? CARDS_CONFIG.radiusMobile : CARDS_CONFIG.radius
 
   const loader = new THREE.TextureLoader()
-  const planeGeo = new THREE.PlaneGeometry(1, 1) // 36 張卡共用同一個幾何
+  const planeGeo = new THREE.PlaneGeometry(1, 1) // 所有卡共用同一個幾何
+  let sizeFactor = 1 // GUI 的卡片大小係數
 
   // ----- 建卡片：fibonacci 球面均勻灑點 -----
   // 黃金角讓每個點跟鄰居距離都差不多，不會擠在兩極
@@ -101,9 +102,11 @@ export function createCards({ isMobile, reducedMotion }) {
     const y = 1 - (2 * (i + 0.5)) / N // -1 ~ 1 之間均勻分布
     const r = Math.sqrt(1 - y * y)
     const theta = GOLDEN * i
-    mesh.position.set(Math.cos(theta) * r, y, Math.sin(theta) * r).multiplyScalar(R)
+    const unitPos = new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r)
+    mesh.position.copy(unitPos).multiplyScalar(R)
 
-    mesh.userData = { work, uniforms, planeAspect: 1, slot: 0, fileIndex: 0 }
+    // unitPos 是球面上的「方向」，GUI 改半徑時用它重新定位
+    mesh.userData = { work, uniforms, unitPos, planeAspect: 1, slot: 0, fileIndex: 0 }
     group.add(mesh)
     return mesh
   })
@@ -149,6 +152,9 @@ export function createCards({ isMobile, reducedMotion }) {
         const w = Math.min(CARDS_CONFIG.baseHeight * aspect, CARDS_CONFIG.maxWidth)
         card.scale.set(w, w / aspect, 1)
         card.userData.planeAspect = aspect // 等比縮放 → 卡片比例 = 第一張圖比例
+        card.userData.origScale = card.scale.clone() // GUI 縮放係數的基準
+        // 套用目前的 GUI 縮放係數（可能在貼圖載入前就被調過）
+        card.scale.multiplyScalar(sizeFactor)
         card.userData.baseScale = card.scale.clone() // hover 放大的還原基準
 
         uniforms.uTexA.value = texture // 第一張圖不需要裁切（uFitA 維持 1,1,0,0）
@@ -228,5 +234,23 @@ export function createCards({ isMobile, reducedMotion }) {
     cards.forEach((card) => card.quaternion.copy(qBillboard))
   }
 
-  return { group, cards, update }
+  // ----- 給 GUI 面板的即時調整 -----
+  // 改卡片球半徑：沿著各自的方向重新定位
+  function setRadius(r) {
+    cards.forEach((card) => {
+      card.position.copy(card.userData.unitPos).multiplyScalar(r)
+    })
+  }
+
+  // 改卡片大小：以載入時的原始大小為基準乘上係數
+  function setSizeFactor(f) {
+    sizeFactor = f
+    cards.forEach((card) => {
+      if (!card.userData.origScale) return // 貼圖還沒載到
+      card.userData.baseScale.copy(card.userData.origScale).multiplyScalar(f)
+      card.scale.copy(card.userData.baseScale)
+    })
+  }
+
+  return { group, cards, update, setRadius, setSizeFactor }
 }

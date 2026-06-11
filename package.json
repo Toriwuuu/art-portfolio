@@ -16,6 +16,7 @@
     "@material-symbols/svg-400": "^0.36.0",
     "@pmndrs/vanilla": "^1.25.0",
     "gsap": "^3.13.0",
-    "three": "^0.182.0"
+    "three": "^0.182.0",
+    "tweakpane": "^4.0.5"
   }
 }

@@ -5,9 +5,11 @@
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { createBlob, BLOB_CONFIG } from './blob.js'
+import { createNoiseBg } from './bg.js'
 import { createCards } from './cards.js'
 import { initControls } from './controls.js'
 import { open as openLightbox, setSceneHooks } from './lightbox.js'
+import { initGui } from './gui.js'
 
 // ---------- 可調參數 ----------
 const CONFIG = {
@@ -56,6 +58,10 @@ export function initScene() {
   )
   camera.position.z = isMobile ? CONFIG.cameraZMobile : CONFIG.cameraZ
 
+  // ----- 動態雜訊背景（最底層）-----
+  const noiseBg = createNoiseBg()
+  scene.add(noiseBg.mesh)
+
   // ----- 中央流體 -----
   const blob = createBlob(isMobile)
   scene.add(blob.mesh)
@@ -96,13 +102,21 @@ export function initScene() {
   const clock = new THREE.Clock()
   let rafId = null
   let paused = false
-  const flowSpeed = reducedMotion ? BLOB_CONFIG.flowSpeed * 0.5 : BLOB_CONFIG.flowSpeed
+  // 包成物件讓 GUI 面板能即時改流速
+  const motion = { flowSpeed: reducedMotion ? BLOB_CONFIG.flowSpeed * 0.5 : BLOB_CONFIG.flowSpeed }
+
+  // 流速改變時不能讓 uTime 跳一格，所以自己累積時間
+  let blobTime = 0
+  let lastTickT = 0
 
   function tick() {
     const t = clock.getElapsedTime()
+    blobTime += (t - lastTickT) * motion.flowSpeed
+    lastTickT = t
 
-    blob.uniforms.uTime.value = t * flowSpeed
+    blob.uniforms.uTime.value = blobTime
     blob.uniforms.uMouse.value.lerp(mouseTarget, CONFIG.mouseLerp)
+    noiseBg.uniforms.uTime.value = reducedMotion ? 0 : t // 偏好減少動態 → 顆粒靜止
 
     // 流體緩慢自轉 + 隨滑鼠微傾
     blob.mesh.rotation.y = t * 0.05 + blob.uniforms.uMouse.value.x * BLOB_CONFIG.mouseTilt
@@ -148,7 +162,9 @@ export function initScene() {
   function resume() {
     if (paused) {
       paused = false
-      clock.start()
+      clock.start() // 重新計時（elapsed 從 0 開始）
+      lastTickT = 0 // 時間累積器同步歸零，避免恢復瞬間時間倒退
+      lastT = 0
       tick()
     }
   }
@@ -160,6 +176,9 @@ export function initScene() {
 
   // 燈箱打開時也暫停（黑底蓋住場景了，沒必要繼續畫），關閉恢復
   setSceneHooks({ onOpen: pause, onClose: resume })
+
+  // ----- GUI 參數面板（右下角玻璃按鈕觸發）-----
+  initGui({ noiseBg, blob, cards, pinkLight, motion })
 
   // 開發模式掛在 window 上，方便自動化測試讀內部狀態
   if (import.meta.env.DEV) {
