@@ -71,6 +71,7 @@ export function open(work) {
   `
 
   overlay.hidden = false
+  document.body.classList.add('lightbox-open') // 開燈箱時藏光束游標
   overlay.querySelector('.lightbox-scroll').scrollTop = 0
   overlay.querySelector('.lightbox-close').focus()
   onOpenCallback?.()
@@ -78,6 +79,7 @@ export function open(work) {
 
 function close() {
   overlay.hidden = true
+  document.body.classList.remove('lightbox-open')
   if (lastFocused) lastFocused.focus()
   onCloseCallback?.()
 }

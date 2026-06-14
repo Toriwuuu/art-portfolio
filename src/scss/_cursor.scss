@@ -1,0 +1,61 @@
+@use 'variables' as *;
+
+// ===== 光束游標 =====
+// 只在有滑鼠的裝置出現（觸控裝置不套用，維持原生行為）。
+@media (hover: hover) and (pointer: fine) {
+  // 3D 場景上藏起系統游標，讓光束當主角
+  #stage {
+    cursor: none;
+  }
+
+  // 靜止時是一顆發光小圓核（游標本體）；移動時被 scaleX 拉長成光束
+  .beam {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: $pink;
+    box-shadow:
+      0 0 12px 2px rgba(233, 49, 204, 0.8),
+      0 0 28px 6px rgba(233, 49, 204, 0.35);
+    pointer-events: none; // 純視覺，不擋點擊
+    z-index: 9000;
+    opacity: 0;
+    mix-blend-mode: screen; // 在深色底上像真的光
+    will-change: transform, opacity, width, height;
+    transition:
+      opacity 0.35s ease,
+      width 0.2s ease,
+      height 0.2s ease,
+      background 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .beam.is-on {
+    opacity: 0.9;
+  }
+
+  // 按下時收成亮白點
+  .beam.is-press {
+    background: #fff;
+    box-shadow:
+      0 0 16px 3px rgba(255, 255, 255, 0.9),
+      0 0 36px 10px rgba(233, 49, 204, 0.5);
+  }
+
+  // hover 到可點的卡片時核心變大變亮（取代原本的 pointer 游標提示）
+  body.is-card-hover .beam {
+    width: 24px;
+    height: 24px;
+    box-shadow:
+      0 0 18px 4px rgba(233, 49, 204, 0.95),
+      0 0 44px 12px rgba(233, 49, 204, 0.5);
+  }
+
+  // 燈箱開著時不顯示光束（看作品不被干擾）
+  body.lightbox-open .beam {
+    opacity: 0;
+  }
+}

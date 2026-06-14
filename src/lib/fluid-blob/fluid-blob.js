@@ -60,6 +60,14 @@ export function createFluidBlob(options = {}) {
   let blobTime = 0
   let elapsed = 0
 
+  // ----- 游標切割狀態 -----
+  const prevMouse = new THREE.Vector2()
+  const cutVel = new THREE.Vector2()
+  const cutPointWorld = new THREE.Vector3()
+  const cutNormalWorld = new THREE.Vector3(1, 0, 0) // 預設法線，避免靜止時 normalize NaN
+  const _invQuat = new THREE.Quaternion()
+  let cutStrength = 0
+
   // 每幀呼叫。dt = 這一幀經過的秒數（內部夾上限，切分頁回來不會跳一大步）
   function update(dt) {
     dt = Math.min(dt, 0.05)
@@ -74,6 +82,25 @@ export function createFluidBlob(options = {}) {
       (params.autoRotate ? elapsed * params.rotateSpeed : 0) +
       uniforms.uMouse.value.x * params.mouseTilt
     mesh.rotation.x = uniforms.uMouse.value.y * -params.mouseTilt
+
+    // ----- 游標切割：依滑鼠速度與角度把流體劃開，再慢慢聚合 -----
+    if (params.slice && params.interactive) {
+      cutVel.subVectors(mouseTarget, prevMouse) // 這一幀滑鼠在 NDC 移了多少
+      prevMouse.copy(mouseTarget)
+      const speed = dt > 1e-6 ? cutVel.length() / dt : 0 // NDC/秒（dt=0 的首幀防 0/0=NaN）
+      // 強度：快速滑動衝高；平常以 dt 校正的衰減慢慢回到 0（= 流體聚合）
+      cutStrength *= Math.pow(0.12, dt)         // 約 1 秒衰減到很小
+      cutStrength = Math.max(cutStrength, Math.min(speed * 0.32, 1))
+      // 切面法線 = 垂直於滑動方向（夠快才更新，避免靜止時抖動）
+      if (speed > 0.15) cutNormalWorld.set(-cutVel.y, cutVel.x, 0).normalize()
+      // 切面位置 = 游標映到世界（球在原點，游標掃過球心時最有感）
+      cutPointWorld.set(uniforms.uMouse.value.x * 3.0, uniforms.uMouse.value.y * 3.0, 0)
+      // 轉進物件座標：球會自轉，抵銷它的旋轉，切口才固定在「螢幕上游標處」
+      _invQuat.copy(mesh.quaternion).invert()
+      uniforms.uCutPoint.value.copy(cutPointWorld).applyQuaternion(_invQuat)
+      uniforms.uCutNormal.value.copy(cutNormalWorld).applyQuaternion(_invQuat)
+      uniforms.uCutStrength.value = cutStrength
+    }
   }
 
   // ----- 玻璃折射的兩段式渲染 -----

@@ -143,7 +143,8 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
       }
     }
     hovered = card
-    canvas.style.cursor = card ? 'pointer' : 'grab'
+    // 換成 body class，讓光束游標在 hover 卡片時變亮（取代原本的 pointer 游標）
+    document.body.classList.toggle('is-card-hover', !!card)
     if (card) {
       gsap.to(card.userData.uniforms.uHover, { value: 1, duration: 0.3 })
       if (!reducedMotion) {
@@ -155,8 +156,6 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
       }
     }
   }
-
-  canvas.style.cursor = 'grab'
 
   // ----- 每幀更新（由 scene.js 的渲染迴圈呼叫）-----
   function update(dt) {

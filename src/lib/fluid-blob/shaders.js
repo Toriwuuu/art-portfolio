@@ -93,6 +93,9 @@ uniform float uFreq;
 uniform float uAmp;
 uniform vec2 uMouse;
 uniform float uRipple;
+uniform vec3 uCutPoint;     // 切面通過的點（物件座標）
+uniform vec3 uCutNormal;    // 切面法線 = 垂直於游標滑動方向（物件座標）
+uniform float uCutStrength; // 0~1：游標越快越大，之後衰減回 0（聚合）
 
 float blobDisplace(vec3 p) {
   float n = blobSnoise(p * uFreq + uTime) * 0.7
@@ -101,6 +104,15 @@ float blobDisplace(vec3 p) {
   vec3 mouseDir = normalize(vec3(uMouse, 0.6));
   float facing = smoothstep(0.0, 1.0, dot(normalize(p), mouseDir));
   return n * uAmp * (1.0 + facing * uRipple);
+}
+
+// 游標切割：切面附近一條帶的頂點沿法線往兩側推開（劃破→散開），
+// uCutStrength 衰減回 0 時自然閉合（聚合）。
+vec3 blobSlice(vec3 p) {
+  if (uCutStrength < 0.001) return vec3(0.0);
+  float d = dot(p - uCutPoint, uCutNormal); // 到切面的有號距離
+  float gash = exp(-d * d * 5.0);           // 只影響切面附近
+  return uCutNormal * sign(d) * gash * uCutStrength * 0.7;
 }
 `
 
@@ -132,7 +144,7 @@ export function injectDisplacement(material, uniforms) {
       )
       .replace(
         '#include <begin_vertex>',
-        /* glsl */ `vec3 transformed = position + normal * blobDisplace(position);`
+        /* glsl */ `vec3 transformed = position + normal * blobDisplace(position) + blobSlice(position);`
       )
   }
   material.needsUpdate = true

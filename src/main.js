@@ -5,9 +5,11 @@
 import './scss/main.scss'
 import { initIcons } from './js/icons.js'
 import { initLoader, hideLoader } from './js/loader.js'
+import { initCursor } from './js/cursor.js'
 
 initLoader() // 記下進站時間（進度條至少走 1.5 秒）
 initIcons()
+initCursor() // 光束游標（只在有滑鼠的裝置生效）
 
 // 試著建立 WebGL context 來判斷支不支援
 function webglAvailable() {
