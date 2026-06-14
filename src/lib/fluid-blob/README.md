@@ -75,6 +75,32 @@ blob.uniforms.uAmp.value = 0.6       // 形狀旋鈕（uFreq / uAmp / uRipple）
 blob.params.flowSpeed = 0.2          // 運動參數（每幀讀取，直接寫就生效）
 ```
 
+## 主題預設（一鍵換整套外觀）
+
+內建五種玻璃風格，懶得一個個調參數時直接套：
+
+| id | 名稱 | 風格 |
+|---|---|---|
+| `blush` | 桃紅 | 招牌粉桃透色（= 預設值，當「回到原本」用） |
+| `aqua` | 清水 | 清澈淡藍、水的折射率 |
+| `mercury` | 水銀 | 鏡面金屬、強反射、快速變暗像實心 |
+| `candy` | 糖果 | 強色散彩虹邊、紫透色、活潑彈跳 |
+| `amber` | 琥珀 | 暖蜜金、稍霧、黏稠慢流 |
+
+兩種用法：
+
+```js
+// 1. 開場就指定（可再覆寫個別參數）
+createFluidBlob({ preset: 'aqua', roughness: 0.1 })
+mountFluidBlob(el, { preset: 'candy' })
+
+// 2. 跑起來後即時切換（不用重建）
+blob.applyPreset('mercury')
+```
+
+預設清單與標籤可從 `PRESET_LIST` 取得（做選單時用）；
+要自訂主題就照 `presets.js` 的格式新增一包。
+
 ## 選項表（全部可不填，預設值見 defaults.js）
 
 ### 形狀與運動

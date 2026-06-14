@@ -31,15 +31,15 @@
 <body>
   <div id="hero"></div>
   <div class="caption">
-    <strong>fluid-blob</strong> Standalone 示範<br />
-    mountFluidBlob() 一行掛載 · 透色覆寫為藍色（證明選項覆寫有效）
+    <strong>fluid-blob</strong> Standalone 示範 · <span id="now">清水</span><br />
+    mountFluidBlob() 一行掛載 · <strong>點畫面</strong>循環切換五種主題預設
   </div>
   <script type="module">
     import * as THREE from 'three'
-    import { mountFluidBlob } from '/src/lib/fluid-blob/index.js'
+    import { mountFluidBlob, PRESET_LIST } from '/src/lib/fluid-blob/index.js'
 
     const app = mountFluidBlob(document.querySelector('#hero'), {
-      attenuationColor: '#3a86ff', // 覆寫品牌桃紅 → 藍色，其餘照預設
+      preset: 'aqua', // 用 preset 選項開場就套清水主題
     })
 
     // 玻璃折射的是「它後面的世界」——空場景只會折射底色、看起來很平。
@@ -53,6 +53,15 @@
       const angle = (i / colors.length) * Math.PI * 2 + 0.6
       disc.position.set(Math.cos(angle) * 1.8, Math.sin(angle) * 1.4, -2.5)
       app.scene.add(disc)
+    })
+
+    // 點畫面循環切換主題：applyPreset() 不用重建就能即時換外觀
+    const label = document.getElementById('now')
+    let i = 1 // 從清水（index 1）開始
+    addEventListener('click', () => {
+      i = (i + 1) % PRESET_LIST.length
+      app.blob.applyPreset(PRESET_LIST[i].id)
+      label.textContent = PRESET_LIST[i].label
     })
 
     // 開 console 可以玩：__demo.pause() / __demo.resume() / __demo.destroy()

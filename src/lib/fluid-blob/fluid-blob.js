@@ -15,17 +15,26 @@
 
 import * as THREE from 'three'
 import { FLUID_BLOB_DEFAULTS } from './defaults.js'
+import { PRESETS } from './presets.js'
 import { createBlobMesh } from './blob-mesh.js'
 
 export function createFluidBlob(options = {}) {
-  // ----- 合併參數：預設值 ← 環境偵測 ← 使用者覆寫 -----
+  // preset 是一包外觀參數（見 presets.js），合併順序在使用者覆寫「之前」，
+  // 所以 createFluidBlob({ preset: 'aqua', roughness: 0.2 }) 會以 aqua 為底、再蓋上 roughness。
+  const { preset, ...overrides } = options
+  if (preset && !PRESETS[preset]) {
+    console.warn(`[fluid-blob] 未知的主題預設：${preset}（可用：${Object.keys(PRESETS).join(', ')}）`)
+  }
+
+  // ----- 合併參數：預設值 ← 環境偵測 ← 主題預設 ← 使用者覆寫 -----
   // params 是「活的」：update() 每幀都讀它，
   // 所以 GUI 面板直接寫 blob.params.flowSpeed 就即時生效。
   const params = {
     ...FLUID_BLOB_DEFAULTS,
     isMobile: window.innerWidth < 768,
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    ...options,
+    ...(preset && PRESETS[preset] ? PRESETS[preset] : {}),
+    ...overrides,
   }
   // 使用者偏好減少動態 → 流速減半（直接寫回 params，GUI 顯示的就是減半後的值）
   if (params.reducedMotion) params.flowSpeed *= 0.5
@@ -82,6 +91,32 @@ export function createFluidBlob(options = {}) {
     renderer.setRenderTarget(null)
   }
 
+  // ----- 即時套用主題預設 -----
+  // 切換主題時，每個參數該寫去哪：材質屬性 / 顏色 / shader uniform。
+  const MATERIAL_PROPS = ['roughness', 'ior', 'thickness', 'chromaticAberration', 'anisotropicBlur', 'distortion', 'distortionScale', 'temporalDistortion', 'attenuationDistance', 'envMapIntensity']
+  const COLOR_PROPS = { glassColor: 'color', attenuationColor: 'attenuationColor' }
+  const UNIFORM_PROPS = { noiseFreq: 'uFreq', noiseAmp: 'uAmp', mouseRipple: 'uRipple' }
+
+  function applyParam(key, value) {
+    params[key] = value // 不論哪一種，都先寫回「活的」params
+    if (MATERIAL_PROPS.includes(key)) material[key] = value
+    else if (key in COLOR_PROPS) material[COLOR_PROPS[key]]?.set(value)
+    else if (key in UNIFORM_PROPS) uniforms[UNIFORM_PROPS[key]].value = value
+    // 其餘（flowSpeed / mouseTilt / rotateSpeed / mouseLerp）只活在 params，update() 每幀讀
+  }
+
+  // 把整組主題參數套到「已經在跑」的這顆球上（不用重建）。
+  // 回傳套用的那包參數，方便 GUI 同步面板上的數值顯示。
+  function applyPreset(name) {
+    const p = PRESETS[name]
+    if (!p) {
+      console.warn(`[fluid-blob] 未知的主題預設：${name}`)
+      return null
+    }
+    for (const key in p) applyParam(key, p[key])
+    return p
+  }
+
   // 收拾乾淨：移除監聽、釋放顯示卡資源（換頁或關掉效果時呼叫）
   function dispose() {
     if (params.interactive) window.removeEventListener('pointermove', onPointerMove)
@@ -98,6 +133,7 @@ export function createFluidBlob(options = {}) {
     isTransmission,
     update,
     renderTransmissionPass,
+    applyPreset,    // applyPreset('aqua')：即時換主題（見 presets.js）
     dispose,
   }
 }

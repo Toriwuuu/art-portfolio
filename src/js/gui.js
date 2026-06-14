@@ -5,6 +5,7 @@
 
 import { icons } from './icons.js'
 import { BG_CONFIG } from './bg.js'
+import { PRESET_LIST } from '../lib/fluid-blob/index.js'
 import { CARDS_CONFIG } from './cards.js'
 import { CONTROLS_CONFIG } from './controls.js'
 
@@ -90,6 +91,23 @@ async function buildPane(container, { noiseBg, blob, cards, pinkLight }) {
     lightIntensity: pinkLight.intensity,
   }
   const defaults = { ...params } // 重設用
+
+  // ---------- 主題預設（放最上面，一鍵換整套玻璃外觀）----------
+  // 選了之後：套到實際的球 → 把套用的值同步回面板 → 重畫各 slider。
+  const presetState = { preset: '' }
+  const presetOptions = { '自訂…': '' }
+  PRESET_LIST.forEach(({ id, label }) => { presetOptions[label] = id })
+  let applyingPreset = false // 防 refresh 再次觸發本身的 change 造成迴圈
+  pane.addBinding(presetState, 'preset', { label: '主題預設', options: presetOptions })
+    .on('change', (e) => {
+      if (applyingPreset || !e.value) return
+      const applied = blob.applyPreset(e.value)
+      if (!applied) return
+      applyingPreset = true
+      Object.assign(params, applied) // 同步面板顯示的數值
+      pane.refresh()                 // 重畫玻璃材質/流體形狀那幾組 slider
+      applyingPreset = false
+    })
 
   // ---------- 背景雜訊 ----------
   const fBg = pane.addFolder({ title: '背景雜訊' })

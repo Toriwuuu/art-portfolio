@@ -12,3 +12,4 @@
 export { createFluidBlob } from './fluid-blob.js'
 export { mountFluidBlob, createRoomEnv } from './standalone.js'
 export { FLUID_BLOB_DEFAULTS } from './defaults.js'
+export { PRESETS, PRESET_LIST } from './presets.js'
