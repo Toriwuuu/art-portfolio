@@ -21,10 +21,9 @@ export function createBlobMesh(params) {
     uAmp: { value: params.noiseAmp },
     uMouse: { value: new THREE.Vector2(0, 0) },
     uRipple: { value: params.mouseRipple },
-    // 游標切割（值由 fluid-blob.js 每幀更新；已轉到物件座標）
-    uCutPoint: { value: new THREE.Vector3(0, 0, 0) },
-    uCutNormal: { value: new THREE.Vector3(1, 0, 0) },
-    uCutStrength: { value: 0 },
+    // 游標牽引（值由 fluid-blob.js 每幀更新；已轉到物件座標）
+    uPokePoint: { value: new THREE.Vector3(0, 0, 0) },
+    uPokeStrength: { value: 0 },
   }
 
   let material

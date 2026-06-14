@@ -39,7 +39,7 @@ export const FLUID_BLOB_DEFAULTS = {
   autoRotate: true,    // 緩慢自轉
   rotateSpeed: 0.05,   // 自轉速度（弧度/秒）
   mouseLerp: 0.04,     // 滑鼠跟隨的慢半拍程度（越小越慵懶）
-  slice: true,         // 游標快速劃過時把流體劃開、再慢慢聚合（需 interactive）
+  poke: true,          // 游標掃過時把附近流體攪動、輕輕鼓盪，停手後聚合（需 interactive）
 
   // ----- 玻璃折射用的離屏畫布 -----
   // 固定解析度、跟視窗大小無關，效能可控

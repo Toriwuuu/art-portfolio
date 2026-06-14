@@ -93,9 +93,8 @@ uniform float uFreq;
 uniform float uAmp;
 uniform vec2 uMouse;
 uniform float uRipple;
-uniform vec3 uCutPoint;     // 切面通過的點（物件座標）
-uniform vec3 uCutNormal;    // 切面法線 = 垂直於游標滑動方向（物件座標）
-uniform float uCutStrength; // 0~1：游標越快越大，之後衰減回 0（聚合）
+uniform vec3 uPokePoint;     // 游標映到球上的影響點（物件座標）
+uniform float uPokeStrength; // 0~1：游標越快越大，之後衰減回 0（聚合）
 
 float blobDisplace(vec3 p) {
   float n = blobSnoise(p * uFreq + uTime) * 0.7
@@ -106,13 +105,14 @@ float blobDisplace(vec3 p) {
   return n * uAmp * (1.0 + facing * uRipple);
 }
 
-// 游標切割：切面附近一條帶的頂點沿法線往兩側推開（劃破→散開），
-// uCutStrength 衰減回 0 時自然閉合（聚合）。
-vec3 blobSlice(vec3 p) {
-  if (uCutStrength < 0.001) return vec3(0.0);
-  float d = dot(p - uCutPoint, uCutNormal); // 到切面的有號距離
-  float gash = exp(-d * d * 5.0);           // 只影響切面附近
-  return uCutNormal * sign(d) * gash * uCutStrength * 0.7;
+// 游標牽引：游標附近的表面被輕輕攪動（高頻流動噪聲，會往內外盪 → 像被光束擾動而散開），
+// uPokeStrength 衰減回 0 時回到平靜（流體聚合）。沿法線、力道刻意小。
+float blobPoke(vec3 p) {
+  if (uPokeStrength < 0.001) return 0.0;
+  float dist = length(p - uPokePoint);
+  float spot = exp(-dist * dist * 2.2);                     // 只影響游標附近
+  float churn = blobSnoise(p * uFreq * 2.5 + uTime * 3.0);  // -1~1 高頻流動
+  return spot * uPokeStrength * (0.1 + churn * 0.3);        // 以攪動為主、微鼓
 }
 `
 
@@ -144,7 +144,7 @@ export function injectDisplacement(material, uniforms) {
       )
       .replace(
         '#include <begin_vertex>',
-        /* glsl */ `vec3 transformed = position + normal * blobDisplace(position) + blobSlice(position);`
+        /* glsl */ `vec3 transformed = position + normal * (blobDisplace(position) + blobPoke(position));`
       )
   }
   material.needsUpdate = true
