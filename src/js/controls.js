@@ -9,7 +9,6 @@ import { isOpen as lightboxIsOpen } from './lightbox.js'
 // ---------- 可調參數（export 讓 GUI 面板可即時調整）----------
 export const CONTROLS_CONFIG = {
   sensitivity: 0.005,  // 拖曳靈敏度（弧度/像素）
-  maxTiltX: 0.6,       // 上下傾轉上限（弧度），避免翻過南北極
   damping: 0.95,       // 慣性衰減：每幀(60fps基準)速度乘上這個值
   clickThreshold: 6,   // 移動小於這個像素數才算「點擊」
   idleDelay: 3,        // 閒置幾秒後開始自轉
@@ -28,11 +27,28 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
   let downX = 0
   let downY = 0
   let totalMove = 0    // 這次按下總共移動多少像素（區分點擊/拖曳用）
-  let velX = 0         // 慣性速度（弧度/秒）
-  let velY = 0
+  let velYaw = 0       // 慣性角速度（弧度/秒）：左右
+  let velPitch = 0     // 上下
   let lastMoveTime = 0
   let idleTimer = 0    // 距離上次互動過了多久
   let autoFactor = 0   // 自轉的「油門」：0~1 之間慢慢進出
+
+  // ----- 旋轉用四元數（trackball：在世界座標累加，上下左右都能無限轉，不卡住）-----
+  // 用 group.rotation（尤拉角）的話，上下會被夾在南北極之間；改用四元數
+  // 在世界座標 premultiply，方向永遠對齊螢幕（拖右就往右轉、拖上就往上翻）。
+  const AXIS_YAW = new THREE.Vector3(0, 1, 0)   // 世界上方向 → 左右轉
+  const AXIS_PITCH = new THREE.Vector3(1, 0, 0) // 世界右方向 → 上下轉
+  const _q = new THREE.Quaternion()
+  function rotateGroup(yaw, pitch) {
+    if (yaw) {
+      _q.setFromAxisAngle(AXIS_YAW, yaw)
+      group.quaternion.premultiply(_q)
+    }
+    if (pitch) {
+      _q.setFromAxisAngle(AXIS_PITCH, pitch)
+      group.quaternion.premultiply(_q)
+    }
+  }
 
   const raycaster = new THREE.Raycaster()
   const pointerNdc = new THREE.Vector2()
@@ -44,7 +60,7 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
     lastX = downX = e.clientX
     lastY = downY = e.clientY
     totalMove = 0
-    velX = velY = 0
+    velYaw = velPitch = 0
     lastMoveTime = performance.now()
     idleTimer = 0
   })
@@ -58,17 +74,14 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
       const now = performance.now()
       const dt = Math.max((now - lastMoveTime) / 1000, 0.001)
 
-      // 水平拖 → 繞 Y 軸轉；垂直拖 → 繞 X 軸轉（夾在 ±maxTiltX 之間）
-      group.rotation.y += dx * CONTROLS_CONFIG.sensitivity
-      group.rotation.x = THREE.MathUtils.clamp(
-        group.rotation.x + dy * CONTROLS_CONFIG.sensitivity,
-        -CONTROLS_CONFIG.maxTiltX,
-        CONTROLS_CONFIG.maxTiltX
-      )
+      // 水平拖 → 左右轉；垂直拖 → 上下轉（四元數累加，上下不再卡住）
+      const yaw = dx * CONTROLS_CONFIG.sensitivity
+      const pitch = dy * CONTROLS_CONFIG.sensitivity
+      rotateGroup(yaw, pitch)
 
-      // 記下這一刻的速度，放開時拿來做慣性滑行
-      velY = (dx * CONTROLS_CONFIG.sensitivity) / dt
-      velX = (dy * CONTROLS_CONFIG.sensitivity) / dt
+      // 記下這一刻的角速度，放開時拿來做慣性滑行
+      velYaw = yaw / dt
+      velPitch = pitch / dt
 
       totalMove += Math.abs(dx) + Math.abs(dy)
       lastX = e.clientX
@@ -92,7 +105,7 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
       raycaster.setFromCamera(pointerNdc, camera)
       const hit = raycaster.intersectObjects(visibleCards(), false)[0]
       if (hit) onCardClick(hit.object.userData.work)
-      velX = velY = 0
+      velYaw = velPitch = 0
     }
   })
 
@@ -148,16 +161,11 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
   // ----- 每幀更新（由 scene.js 的渲染迴圈呼叫）-----
   function update(dt) {
     // 慣性滑行：放開後速度逐漸衰減（以 60fps 為基準做幀率校正）
-    if (!dragging && (Math.abs(velX) > 0.0001 || Math.abs(velY) > 0.0001)) {
-      group.rotation.y += velY * dt
-      group.rotation.x = THREE.MathUtils.clamp(
-        group.rotation.x + velX * dt,
-        -CONTROLS_CONFIG.maxTiltX,
-        CONTROLS_CONFIG.maxTiltX
-      )
+    if (!dragging && (Math.abs(velYaw) > 0.0001 || Math.abs(velPitch) > 0.0001)) {
+      rotateGroup(velYaw * dt, velPitch * dt)
       const decay = Math.pow(CONTROLS_CONFIG.damping, dt * 60)
-      velX *= decay
-      velY *= decay
+      velYaw *= decay
+      velPitch *= decay
     }
 
     // 閒置自轉：幾秒沒人動就慢慢轉起來，一碰又慢慢停
@@ -166,7 +174,7 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
       idleTimer += dt
       const want = !dragging && idleTimer > CONTROLS_CONFIG.idleDelay ? 1 : 0
       autoFactor += (want - autoFactor) * Math.min(dt * 2, 1)
-      group.rotation.y += CONTROLS_CONFIG.autoSpeed * autoFactor * dt
+      rotateGroup(CONTROLS_CONFIG.autoSpeed * autoFactor * dt, 0)
     }
 
     // 縮放平滑趨近目標值
