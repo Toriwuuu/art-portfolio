@@ -4,7 +4,9 @@
 
 import './scss/main.scss'
 import { initIcons } from './js/icons.js'
+import { initLoader, hideLoader } from './js/loader.js'
 
+initLoader() // 記下進站時間（進度條至少走 1.5 秒）
 initIcons()
 
 // 試著建立 WebGL context 來判斷支不支援
@@ -19,9 +21,11 @@ function webglAvailable() {
 
 const forceFallback = new URLSearchParams(location.search).has('fallback')
 
-if (!forceFallback && webglAvailable()) {
-  // 3D 場景比較大（含 Three.js），用動態載入：下載完才啟動
-  import('./js/scene.js').then(({ initScene }) => initScene())
-} else {
-  import('./js/fallback.js').then(({ initFallback }) => initFallback())
-}
+const boot =
+  !forceFallback && webglAvailable()
+    ? // 3D 場景比較大（含 Three.js），用動態載入：下載完才啟動
+      import('./js/scene.js').then(({ initScene }) => initScene())
+    : import('./js/fallback.js').then(({ initFallback }) => initFallback())
+
+// 場景或備案就緒（已畫出第一幀）後，把進度條淡出
+boot.finally(hideLoader)

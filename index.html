@@ -13,9 +13,56 @@
   <meta property="og:image" content="/img/illus/dont-wake-up.jpg">
   <link rel="icon" href="/img/logo.svg">
   <script type="module" src="/src/main.js"></script>
+
+  <!-- 載入動畫的 critical CSS：直接內嵌，確保第一幀就蓋住畫面，
+       不會閃到 body 的舊雜訊底色或左上 logo（不依賴打包後的 CSS）。
+       淡出邏輯在 src/js/loader.js。 -->
+  <style>
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0A0A0D;
+      transition: opacity 0.5s ease;
+    }
+    #loader.is-done {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #loader .loader__bar {
+      width: 180px;
+      height: 2px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+    #loader .loader__fill {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: #E931CC;
+      border-radius: 2px;
+      box-shadow: 0 0 12px rgba(233, 49, 204, 0.7);
+      animation: loaderFill 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes loaderFill {
+      to { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #loader .loader__fill { animation-duration: 0.3s; }
+    }
+  </style>
 </head>
 
 <body>
+  <!-- 載入進度條（場景就緒後由 loader.js 淡出移除）-->
+  <div id="loader" role="progressbar" aria-label="載入中">
+    <div class="loader__bar"><span class="loader__fill"></span></div>
+  </div>
+
   <!-- 全站唯一內容：3D 場景畫布（玻璃流體 + 作品球）-->
   <canvas id="stage"></canvas>
 
