@@ -1,13 +1,16 @@
-// ===== 燈箱 v2 =====
+// ===== 燈箱 v3：左圖右文 =====
 // 用法：open(work)——傳入 data.js 的一件作品。
-// 多圖作品：原圖以「直欄」堆疊，在燈箱內捲動瀏覽（全站唯一可捲動的地方）。
+// 左：主圖；多圖時下方有縮圖列，左右方向鍵或點縮圖切換主圖。
+// 右：標題、年份、說明（說明讀 work.desc，沒有就不顯示）。
 // 關閉方式：右上 X、Esc、點黑底。
 
-import { fullSrc } from './data.js'
+import { fullSrc, thumbSrc } from './data.js'
 import { icons } from './icons.js'
 
 let overlay = null     // 燈箱外層（只建立一次，重複使用）
 let lastFocused = null // 開燈箱前的焦點元素，關閉時還回去
+let current = null     // 目前這件作品
+let idx = 0            // 目前看到第幾張
 
 // 開／關時可掛場景的暫停與恢復（scene.js 會註冊，省電用）
 let onOpenCallback = null
@@ -27,19 +30,39 @@ function buildOverlay() {
 
   overlay.innerHTML = `
     <button class="lightbox-close" type="button" aria-label="關閉">${icons.close}</button>
-    <div class="lightbox-scroll" tabindex="0"></div>
+    <div class="lightbox-stage">
+      <div class="lightbox-media">
+        <div class="lightbox-frame">
+          <button class="lightbox-arrow lightbox-arrow--prev" type="button" aria-label="上一張">${icons.chevronLeft}</button>
+          <img class="lightbox-main" alt="" decoding="async">
+          <button class="lightbox-arrow lightbox-arrow--next" type="button" aria-label="下一張">${icons.chevronRight}</button>
+        </div>
+        <div class="lightbox-thumbs"></div>
+      </div>
+      <div class="lightbox-info">
+        <h2 class="lightbox-title"></h2>
+        <p class="lightbox-year"></p>
+        <p class="lightbox-desc"></p>
+      </div>
+    </div>
   `
   document.body.appendChild(overlay)
 
   overlay.querySelector('.lightbox-close').addEventListener('click', close)
+  overlay.querySelector('.lightbox-arrow--prev').addEventListener('click', () => step(-1))
+  overlay.querySelector('.lightbox-arrow--next').addEventListener('click', () => step(1))
 
-  // 點黑底（不是圖片、標題或按鈕）也能關閉
+  // 點黑底（stage 的空白處）也能關閉
   overlay.addEventListener('click', (e) => {
-    if (e.target === overlay || e.target.classList.contains('lightbox-scroll')) close()
+    if (e.target === overlay || e.target.classList.contains('lightbox-stage')) close()
   })
 
+  // 鍵盤：Esc 關閉、左右方向鍵切換主圖
   document.addEventListener('keydown', (e) => {
-    if (!overlay.hidden && e.key === 'Escape') close()
+    if (overlay.hidden) return
+    if (e.key === 'Escape') close()
+    else if (e.key === 'ArrowLeft') step(-1)
+    else if (e.key === 'ArrowRight') step(1)
   })
 }
 
@@ -47,34 +70,68 @@ export function open(work) {
   if (!overlay) buildOverlay()
 
   lastFocused = document.activeElement
+  current = work
+  idx = 0
 
-  // 直欄內容：標題 + 該作品所有原圖。
-  // 第一張優先載入，其餘 lazy（捲到才下載）；
-  // 插畫有提供原圖尺寸，先寫進 width/height 預留位置避免捲動時跳動
-  const sizeAttr = work.w && work.h ? `width="${work.w}" height="${work.h}"` : ''
-  const imgs = work.files
-    .map((file, i) => {
-      const loadAttr = i === 0
-        ? 'fetchpriority="high"'
-        : 'loading="lazy"'
-      return `
-        <figure>
-          <img src="${fullSrc(work, file)}" alt="${work.title}" ${loadAttr} ${sizeAttr} decoding="async">
-        </figure>
-      `
-    })
-    .join('')
+  // ----- 右側文字：標題 / 年份 / 說明 -----
+  overlay.querySelector('.lightbox-title').textContent = work.title
+  const yearEl = overlay.querySelector('.lightbox-year')
+  yearEl.textContent = work.year ? String(work.year) : ''
+  yearEl.hidden = !work.year
+  const descEl = overlay.querySelector('.lightbox-desc')
+  descEl.textContent = work.desc || ''
+  descEl.hidden = !work.desc
 
-  overlay.querySelector('.lightbox-scroll').innerHTML = `
-    <h2 class="lightbox-title">${work.title}</h2>
-    ${imgs}
-  `
+  // ----- 縮圖列（多圖才有）-----
+  const multi = work.files.length > 1
+  const thumbsEl = overlay.querySelector('.lightbox-thumbs')
+  thumbsEl.hidden = !multi
+  overlay.querySelectorAll('.lightbox-arrow').forEach((a) => (a.hidden = !multi))
+  thumbsEl.innerHTML = multi
+    ? work.files
+        .map(
+          (file, i) => `
+            <button class="lightbox-thumb" type="button" data-i="${i}" aria-label="第 ${i + 1} 張">
+              <img src="${thumbSrc(work, file)}" alt="" loading="lazy" decoding="async">
+            </button>`
+        )
+        .join('')
+    : ''
+  thumbsEl.querySelectorAll('.lightbox-thumb').forEach((btn) =>
+    btn.addEventListener('click', () => setMain(Number(btn.dataset.i)))
+  )
+
+  setMain(0)
 
   overlay.hidden = false
-  document.body.classList.add('lightbox-open') // 開燈箱時藏光束游標
-  overlay.querySelector('.lightbox-scroll').scrollTop = 0
+  document.body.classList.add('lightbox-open') // 藏光束游標
   overlay.querySelector('.lightbox-close').focus()
   onOpenCallback?.()
+}
+
+// 切到第 i 張：更新主圖與縮圖高亮（環狀，超過頭就繞回去）
+function setMain(i) {
+  const n = current.files.length
+  idx = ((i % n) + n) % n
+  const file = current.files[idx]
+  const frame = overlay.querySelector('.lightbox-frame')
+  const main = overlay.querySelector('.lightbox-main')
+
+  // 縮圖先當底圖墊著，原圖載好前不會空一塊（漸進顯影）
+  frame.style.backgroundImage = `url("${thumbSrc(current, file)}")`
+  main.src = fullSrc(current, file)
+  main.alt = current.title
+
+  overlay.querySelectorAll('.lightbox-thumb').forEach((btn, k) =>
+    btn.classList.toggle('is-active', k === idx)
+  )
+  overlay
+    .querySelector('.lightbox-thumb.is-active')
+    ?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+}
+
+function step(dir) {
+  if (current && current.files.length > 1) setMain(idx + dir)
 }
 
 function close() {

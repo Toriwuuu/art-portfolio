@@ -1,11 +1,11 @@
 @use 'variables' as *;
 
-// ===== 燈箱 v2：可捲動直欄 =====
+// ===== 燈箱 v3：左圖右文 =====
 .lightbox {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.93);
+  background: rgba(0, 0, 0, 0.94);
 
   &[hidden] {
     display: none;
@@ -20,13 +20,13 @@
     transition: color 0.3s ease, transform 0.3s ease;
 
     svg {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       fill: currentColor;
 
       @media (max-width: 640px) {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
       }
     }
 
@@ -36,50 +36,214 @@
     }
   }
 
-  // 全站唯一可捲動的容器
-  // overscroll-behavior: contain 防止捲到底時把捲動「外溢」給頁面
-  .lightbox-scroll {
+  // 左右兩欄：左圖、右文
+  .lightbox-stage {
     height: 100%;
-    overflow-y: auto;
-    overscroll-behavior: contain;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 32px;
-    padding: 96px 24px;
+    gap: 48px;
+    padding: 72px 64px;
+
+    @media (max-width: 900px) {
+      flex-direction: column;
+      gap: 24px;
+      padding: 72px 20px 32px;
+      overflow-y: auto; // 直立排版時整欄可捲
+      overscroll-behavior: contain;
+    }
 
     @media (max-width: 640px) {
-      gap: 20px;
-      padding: 80px 16px;
+      padding: 64px 16px 24px;
+    }
+  }
+
+  // ---------- 左：圖片區 ----------
+  .lightbox-media {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+
+    @media (max-width: 900px) {
+      flex: none;
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  // 主圖框：縮圖當底圖墊著（原圖載入前不會空一塊）
+  .lightbox-frame {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    @media (max-width: 900px) {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  .lightbox-main {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 0 80px rgba(233, 49, 204, 0.15);
+  }
+
+  // 左右切換箭頭（多圖才顯示）
+  .lightbox-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    color: $white;
+    background: rgba(10, 10, 13, 0.5);
+    backdrop-filter: blur(8px);
+    transition: color 0.2s ease, background 0.2s ease;
+
+    svg {
+      width: 32px;
+      height: 32px;
+      fill: currentColor;
+    }
+
+    &:hover {
+      color: $pink;
+      background: rgba(10, 10, 13, 0.75);
+    }
+
+    &--prev {
+      left: 8px;
+    }
+    &--next {
+      right: 8px;
+    }
+    &[hidden] {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      width: 40px;
+      height: 40px;
+      svg {
+        width: 26px;
+        height: 26px;
+      }
+    }
+  }
+
+  // 縮圖列（多圖才顯示）
+  .lightbox-thumbs {
+    flex: none;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px;
+    scrollbar-width: thin;
+
+    &[hidden] {
+      display: none;
+    }
+
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(233, 49, 204, 0.5);
+      border-radius: 3px;
+    }
+  }
+
+  .lightbox-thumb {
+    flex: 0 0 auto;
+    width: 72px;
+    height: 72px;
+    border-radius: 4px;
+    overflow: hidden;
+    opacity: 0.5;
+    outline: 2px solid transparent;
+    outline-offset: 1px;
+    transition: opacity 0.2s ease, outline-color 0.2s ease;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    &:hover {
+      opacity: 0.85;
+    }
+    &.is-active {
+      opacity: 1;
+      outline-color: $pink;
+    }
+
+    @media (max-width: 640px) {
+      width: 56px;
+      height: 56px;
+    }
+  }
+
+  // ---------- 右：文字區 ----------
+  .lightbox-info {
+    flex: 0 0 320px;
+    max-width: 360px;
+    align-self: center;
+
+    @media (max-width: 900px) {
+      flex: none;
+      width: 100%;
+      max-width: none;
+      align-self: stretch;
     }
   }
 
   .lightbox-title {
     font-weight: 900;
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
-    letter-spacing: 0.08em;
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
     color: $pink;
   }
 
-  figure {
-    width: 100%;
-    max-width: min(960px, 88vw);
+  .lightbox-year {
+    margin-top: 8px;
+    font-size: 1rem;
+    letter-spacing: 0.12em;
+    color: $deepg;
 
-    img {
-      width: 100%;
-      height: auto;
-      border-radius: 4px;
-      box-shadow: 0 0 80px rgba(233, 49, 204, 0.15);
+    &[hidden] {
+      display: none;
     }
   }
 
-  // 捲軸做成細細的桃紅色
-  .lightbox-scroll::-webkit-scrollbar {
-    width: 6px;
-  }
+  .lightbox-desc {
+    margin-top: 20px;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: $lightg;
+    white-space: pre-line; // data.js 裡的換行會生效
 
-  .lightbox-scroll::-webkit-scrollbar-thumb {
-    background: rgba(233, 49, 204, 0.5);
-    border-radius: 3px;
+    &[hidden] {
+      display: none;
+    }
   }
 }
