@@ -15,7 +15,7 @@ export const CARDS_CONFIG = {
   maxWidth: 1.3,       // 卡片寬度上限（橫圖不要太霸道）
   fadeIn: 0.6,         // 貼圖載入後的淡入秒數
   carouselEvery: 4,    // 多圖卡每隔幾秒換一張
-  crossfade: 0.8,      // 換圖的 crossfade 秒數
+  crossfade: 1.0,      // 換圖的溶解轉場秒數
   concurrency: 6,      // 同時下載幾張貼圖
 }
 
