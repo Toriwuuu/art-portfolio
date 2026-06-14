@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fluid-blob 獨立示範</title>
+  <!--
+    這一頁是 fluid-blob 模組「Standalone 模式」的最小示範：
+    一個容器 + 幾行 JS，玻璃流體球就掛上去了。
+    只在開發模式看得到（npm run dev → /demo.html）；
+    vite build 預設只打包 index.html，所以它不會跟著部署。
+  -->
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { background: #0a0a0d; font-family: system-ui, sans-serif; }
+    #hero { position: fixed; inset: 0; }
+    .caption {
+      position: fixed;
+      left: 24px;
+      bottom: 20px;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      line-height: 1.7;
+      pointer-events: none;
+    }
+    .caption strong { color: rgba(255, 255, 255, 0.85); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div id="hero"></div>
+  <div class="caption">
+    <strong>fluid-blob</strong> Standalone 示範<br />
+    mountFluidBlob() 一行掛載 · 透色覆寫為藍色（證明選項覆寫有效）
+  </div>
+  <script type="module">
+    import * as THREE from 'three'
+    import { mountFluidBlob } from '/src/lib/fluid-blob/index.js'
+
+    const app = mountFluidBlob(document.querySelector('#hero'), {
+      attenuationColor: '#3a86ff', // 覆寫品牌桃紅 → 藍色，其餘照預設
+    })
+
+    // 玻璃折射的是「它後面的世界」——空場景只會折射底色、看起來很平。
+    // 所以在球後面放幾個發亮的色塊（回傳的 scene 把手可以自由加東西）。
+    const colors = ['#3a86ff', '#ff5d8f', '#ffd166', '#7bf1a8']
+    colors.forEach((color, i) => {
+      const disc = new THREE.Mesh(
+        new THREE.CircleGeometry(0.9, 48),
+        new THREE.MeshBasicMaterial({ color }) // Basic 材質自己發色，不需要燈
+      )
+      const angle = (i / colors.length) * Math.PI * 2 + 0.6
+      disc.position.set(Math.cos(angle) * 1.8, Math.sin(angle) * 1.4, -2.5)
+      app.scene.add(disc)
+    })
+
+    // 開 console 可以玩：__demo.pause() / __demo.resume() / __demo.destroy()
+    window.__demo = app
+  </script>
+</body>
+</html>

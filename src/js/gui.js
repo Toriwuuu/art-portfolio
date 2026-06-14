@@ -5,7 +5,6 @@
 
 import { icons } from './icons.js'
 import { BG_CONFIG } from './bg.js'
-import { BLOB_CONFIG } from './blob.js'
 import { CARDS_CONFIG } from './cards.js'
 import { CONTROLS_CONFIG } from './controls.js'
 
@@ -33,13 +32,33 @@ export function initGui(targets) {
     container.hidden = !container.hidden
     btn.classList.toggle('is-active', !container.hidden)
   })
+
+  // ----- 點面板以外的地方就收起來 -----
+  function closePanel() {
+    container.hidden = true
+    btn.classList.remove('is-active')
+  }
+
+  // 面板開著時，點到「不是面板、也不是按鈕」的地方（例如 3D 背景）就關閉。
+  // 用 pointerdown 而非 click：手指/滑鼠一按下就反應，比較跟手。
+  document.addEventListener('pointerdown', (e) => {
+    if (container.hidden) return
+    if (container.contains(e.target) || btn.contains(e.target)) return
+    closePanel()
+  })
+
+  // 按 Esc 也能關（鍵盤使用者習慣）
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !container.hidden) closePanel()
+  })
 }
 
-async function buildPane(container, { noiseBg, blob, cards, pinkLight, motion }) {
+async function buildPane(container, { noiseBg, blob, cards, pinkLight }) {
   const { Pane } = await import('tweakpane')
   const pane = new Pane({ container, title: '3D 參數' })
 
   // 面板上顯示的值（改了就同步到場景）
+  // 玻璃流體的初始值直接讀 blob.params（fluid-blob 模組的「活」參數物件）
   const params = {
     // 背景雜訊
     bgColor: BG_CONFIG.color,
@@ -47,20 +66,20 @@ async function buildPane(container, { noiseBg, blob, cards, pinkLight, motion })
     bgScale: BG_CONFIG.scale,
     bgSpeed: BG_CONFIG.speed,
     // 玻璃材質
-    roughness: BLOB_CONFIG.roughness,
-    chromaticAberration: BLOB_CONFIG.chromaticAberration,
-    distortion: BLOB_CONFIG.distortion,
-    temporalDistortion: BLOB_CONFIG.temporalDistortion,
-    thickness: BLOB_CONFIG.thickness,
-    ior: BLOB_CONFIG.ior,
-    attenuationColor: BLOB_CONFIG.attenuationColor,
-    attenuationDistance: BLOB_CONFIG.attenuationDistance,
-    envMapIntensity: BLOB_CONFIG.envMapIntensity,
+    roughness: blob.params.roughness,
+    chromaticAberration: blob.params.chromaticAberration,
+    distortion: blob.params.distortion,
+    temporalDistortion: blob.params.temporalDistortion,
+    thickness: blob.params.thickness,
+    ior: blob.params.ior,
+    attenuationColor: blob.params.attenuationColor,
+    attenuationDistance: blob.params.attenuationDistance,
+    envMapIntensity: blob.params.envMapIntensity,
     // 流體形狀
-    noiseFreq: BLOB_CONFIG.noiseFreq,
-    noiseAmp: BLOB_CONFIG.noiseAmp,
-    flowSpeed: motion.flowSpeed,
-    mouseRipple: BLOB_CONFIG.mouseRipple,
+    noiseFreq: blob.params.noiseFreq,
+    noiseAmp: blob.params.noiseAmp,
+    flowSpeed: blob.params.flowSpeed,
+    mouseRipple: blob.params.mouseRipple,
     // 卡片與運動
     cardRadius: CARDS_CONFIG.radius,
     cardSize: 1,
@@ -112,7 +131,7 @@ async function buildPane(container, { noiseBg, blob, cards, pinkLight, motion })
   fShape.addBinding(params, 'noiseAmp', { label: '起伏幅度', min: 0, max: 1, step: 0.01 })
     .on('change', (e) => (blob.uniforms.uAmp.value = e.value))
   fShape.addBinding(params, 'flowSpeed', { label: '流動速度', min: 0, max: 0.5, step: 0.01 })
-    .on('change', (e) => (motion.flowSpeed = e.value))
+    .on('change', (e) => (blob.params.flowSpeed = e.value))
   fShape.addBinding(params, 'mouseRipple', { label: '滑鼠漣漪', min: 0, max: 1, step: 0.05 })
     .on('change', (e) => (blob.uniforms.uRipple.value = e.value))
 

@@ -1,9 +1,5 @@
-// ===== 中央玻璃流體 =====
-// 形狀：高細分球體（icosphere）在 GPU 上用 simplex noise 推擠表面，
-//      像一團緩慢流動的液體（v2 移植）。
-// 材質：drei-vanilla 的 MeshTransmissionMaterial「透射玻璃」——
-//      後面的作品卡會被折射、帶色散（彩虹邊）與流動扭曲，
-//      attenuationColor 讓厚的地方透出品牌桃紅。
+// ===== fluid-blob 的 GLSL 與材質注入 =====
+// 「流體感」的核心：用 simplex noise 在顯示卡上推擠球面的小程式都在這裡。
 //
 // 名詞小抄：
 // - shader：跑在顯示卡上的小程式。vertex shader 決定「形狀」，
@@ -13,45 +9,14 @@
 //   我們用它把噪聲位移塞進玻璃材質的 vertex shader——
 //   注意 MeshTransmissionMaterial 自己也用了這個鉤子（塞色散程式碼），
 //   所以要先存下它的，串接著呼叫，不能直接蓋掉。
-
-import * as THREE from 'three'
-import { MeshTransmissionMaterial } from '@pmndrs/vanilla'
-
-// ---------- 可調參數 ----------
-export const BLOB_CONFIG = {
-  radius: 1.6,         // 球的基本半徑
-  detail: 64,          // 球面細分程度（越高越平滑、越吃效能）
-  detailMobile: 24,
-
-  noiseFreq: 0.9,      // 噪聲頻率：越大表面皺褶越細碎
-  noiseAmp: 0.45,      // 噪聲振幅：越大起伏越誇張
-  flowSpeed: 0.12,     // 流動速度
-  mouseRipple: 0.35,   // 滑鼠側的額外起伏強度
-  mouseTilt: 0.25,     // 滑鼠造成的傾轉幅度（弧度）
-
-  // ----- 玻璃材質 -----
-  // useTransmission: false 時改用 three 內建的 MeshPhysicalMaterial 透射
-  // （效果較簡單但更省效能，是手機跑不動時的備案）
-  useTransmission: true,
-  samples: 8,            // 取樣數：越高玻璃越細緻（手機減半）
-  samplesMobile: 4,
-  roughness: 0.08,       // 表面粗糙：0 全清晰、越大越霧
-  thickness: 1.0,        // 視覺厚度：影響折射強度
-  ior: 1.35,             // 折射率（水 1.33、玻璃 1.5）
-  chromaticAberration: 0.5, // 色散：邊緣的彩虹分離感
-  anisotropicBlur: 0.12, // 折射模糊（太大會把後面的卡糊掉）
-  distortion: 0.5,       // 折射的噪聲扭曲（「流動玻璃」的關鍵）
-  distortionScale: 0.6,
-  temporalDistortion: 0.12, // 扭曲隨時間流動的速度
-  glassColor: '#f6e6f3',    // 玻璃本體色（近白帶一點粉）
-  attenuationColor: '#E931CC', // 厚度透出的顏色 = 品牌桃紅
-  attenuationDistance: 1.6,    // 多厚開始明顯透色（越小越粉、越暗）
-  envMapIntensity: 0.55,       // 環境反射強度（太高會像鍍鉻金屬）
-}
+//
+// 升版注意：這裡靠字串替換 three 內建材質的 shader 片段
+// （#include <begin_vertex> 等），three 或 @pmndrs/vanilla 升版可能改掉
+// 這些片段名稱——升版後務必回來重新驗證（見模組 README）。
 
 // ---------- GLSL：Ashima 的 3D simplex noise（公有領域，業界通用實作）----------
 // 可以當黑盒子：給一個 3D 座標，回傳 -1~1 的平滑亂數
-const SNOISE = /* glsl */ `
+export const SNOISE = /* glsl */ `
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
@@ -118,11 +83,11 @@ float blobSnoise(vec3 v) {
 }
 `
 
-// ---------- GLSL：位移函式（形狀的核心，v2 移植）----------
+// ---------- GLSL：位移函式（形狀的核心）----------
 // 兩層噪聲疊加（大起伏 + 小細節），滑鼠那一側起伏加強形成「被攪動」感。
 // 函式與 noise 都加 blob 前綴，避免跟 MeshTransmissionMaterial
 // 自己注入的 snoise 撞名。
-const DISPLACE = /* glsl */ `
+export const DISPLACE = /* glsl */ `
 uniform float uTime;
 uniform float uFreq;
 uniform float uAmp;
@@ -143,7 +108,7 @@ float blobDisplace(vec3 p) {
 // 1) 形狀：頂點沿法線推出去（替換 begin_vertex）
 // 2) 法線：表面變形後要重算——取旁邊兩個點變形後的位置，
 //    用外積求新的面朝向（替換 beginnormal_vertex）
-function injectDisplacement(material, uniforms) {
+export function injectDisplacement(material, uniforms) {
   const previous = material.onBeforeCompile // MTM 自己的注入，先存起來
   material.onBeforeCompile = (shader, renderer) => {
     previous?.call(material, shader, renderer) // 先讓原本的跑完
@@ -171,53 +136,4 @@ function injectDisplacement(material, uniforms) {
       )
   }
   material.needsUpdate = true
-}
-
-// 建立玻璃流體。回傳 mesh 與 uniforms（渲染迴圈每幀更新 uTime / uMouse）
-export function createBlob(isMobile) {
-  // 位移的旋鈕（傳進 vertex shader）
-  const uniforms = {
-    uTime: { value: 0 },
-    uFreq: { value: BLOB_CONFIG.noiseFreq },
-    uAmp: { value: BLOB_CONFIG.noiseAmp },
-    uMouse: { value: new THREE.Vector2(0, 0) },
-    uRipple: { value: BLOB_CONFIG.mouseRipple },
-  }
-
-  let material
-  if (BLOB_CONFIG.useTransmission) {
-    material = new MeshTransmissionMaterial({
-      samples: isMobile ? BLOB_CONFIG.samplesMobile : BLOB_CONFIG.samples,
-      chromaticAberration: BLOB_CONFIG.chromaticAberration,
-      anisotropicBlur: BLOB_CONFIG.anisotropicBlur,
-      thickness: BLOB_CONFIG.thickness,
-      roughness: BLOB_CONFIG.roughness,
-      distortion: BLOB_CONFIG.distortion,
-      distortionScale: BLOB_CONFIG.distortionScale,
-      temporalDistortion: BLOB_CONFIG.temporalDistortion,
-      attenuationColor: new THREE.Color(BLOB_CONFIG.attenuationColor),
-      attenuationDistance: BLOB_CONFIG.attenuationDistance,
-    })
-  } else {
-    // 備案：three 內建透射（不用手動 buffer pass，效能較省、效果較簡單）
-    material = new THREE.MeshPhysicalMaterial({
-      transmission: 1,
-      thickness: BLOB_CONFIG.thickness,
-      roughness: BLOB_CONFIG.roughness,
-      attenuationColor: new THREE.Color(BLOB_CONFIG.attenuationColor),
-      attenuationDistance: BLOB_CONFIG.attenuationDistance,
-    })
-  }
-  material.ior = BLOB_CONFIG.ior
-  material.color = new THREE.Color(BLOB_CONFIG.glassColor)
-  material.envMapIntensity = BLOB_CONFIG.envMapIntensity
-  injectDisplacement(material, uniforms)
-
-  const detail = isMobile ? BLOB_CONFIG.detailMobile : BLOB_CONFIG.detail
-  const mesh = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(BLOB_CONFIG.radius, detail),
-    material
-  )
-
-  return { mesh, material, uniforms, isTransmission: BLOB_CONFIG.useTransmission }
 }
