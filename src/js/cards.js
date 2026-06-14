@@ -106,7 +106,8 @@ export function createCards({ isMobile, reducedMotion }) {
     mesh.position.copy(unitPos).multiplyScalar(R)
 
     // unitPos 是球面上的「方向」，GUI 改半徑時用它重新定位
-    mesh.userData = { work, uniforms, unitPos, planeAspect: 1, slot: 0, fileIndex: 0 }
+    // textures：依 files 順序存放這張卡所有已載入的貼圖（輪播換圖時讀這裡）
+    mesh.userData = { work, uniforms, unitPos, planeAspect: 1, slot: 0, fileIndex: 0, textures: [] }
     group.add(mesh)
     return mesh
   })
@@ -158,23 +159,23 @@ export function createCards({ isMobile, reducedMotion }) {
         card.userData.baseScale = card.scale.clone() // hover 放大的還原基準
 
         uniforms.uTexA.value = texture // 第一張圖不需要裁切（uFitA 維持 1,1,0,0）
+        card.userData.textures[0] = texture // 第 0 張就位，輪播時可用
         gsap.to(uniforms.uOpacity, { value: 1, duration: CARDS_CONFIG.fadeIn })
       },
     })
   })
 
   // 第二波 + 輪播：等第一波佇列消化完再排
-  const carouselTextures = new Map() // card → [texture, ...]（依 files 順序）
+  // 載到的圖直接放進該卡的 userData.textures（對齊 files 索引），輪播時即時讀取
   cards.forEach((card) => {
     const { work } = card.userData
     if (work.files.length < 2) return
 
-    carouselTextures.set(card, [])
     work.files.slice(1).forEach((file, idx) => {
       enqueue({
         url: thumbSrc(work, file),
         done(texture) {
-          carouselTextures.get(card)[idx] = texture
+          card.userData.textures[idx + 1] = texture // slice(1) 的第 idx 張 = files 的第 idx+1 張
         },
       })
     })
@@ -185,9 +186,11 @@ export function createCards({ isMobile, reducedMotion }) {
   // 使用者偏好減少動態時不啟動（燈箱裡仍看得到全部圖片）。
   function startCarousel(card) {
     const { work, uniforms } = card.userData
-    const textures = [uniforms.uTexA.value, ...(carouselTextures.get(card) || [])]
 
     function step() {
+      // 每次都讀「當下」這張卡載好的貼圖，不在啟動時就拍快照
+      //（啟動時圖根本還沒載完，拍下來會是一堆 null → 輪播永遠跑不動）
+      const textures = card.userData.textures
       card.userData.fileIndex = (card.userData.fileIndex + 1) % work.files.length
       const next = textures[card.userData.fileIndex]
       if (!next || !next.image) return schedule() // 還沒載到就先跳過這輪
