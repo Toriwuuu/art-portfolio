@@ -20,9 +20,9 @@ export const CARDS_CONFIG = {
 }
 
 // 卡片的材質 shader：
-// 兩個貼圖槽（uTexA / uTexB）+ uMix 做輪播 crossfade，
+// 兩個貼圖槽（uTexA / uTexB）+ uMix 做輪播換圖（液態溶解，不是死板的淡入淡出）。
 // uOpacity 做載入淡入，uHover 在邊緣畫桃紅細框。
-// uFitA / uFitB 是「cover 裁切」的 UV 縮放與位移（輪播圖長寬比不同時置中裁切）
+// uSeed 讓每次溶解圖案不同；uFitA / uFitB 是「cover 裁切」的 UV 縮放與位移。
 const CARD_VERTEX = /* glsl */ `
 varying vec2 vUv;
 void main() {
@@ -37,14 +37,40 @@ uniform sampler2D uTexB;
 uniform float uMix;
 uniform float uOpacity;
 uniform float uHover;
-uniform vec4 uFitA; // xy = UV 縮放, zw = UV 位移
+uniform float uSeed; // 每次換圖換一個亂數 → 溶解圖案不會每次都一樣
+uniform vec4 uFitA;  // xy = UV 縮放, zw = UV 位移
 uniform vec4 uFitB;
 varying vec2 vUv;
+
+// 便宜亂數 + 平滑 value noise：給溶解一個有機的流動邊界（呼應流體玻璃與膠片顆粒）
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
+float vnoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  float a = hash(i), b = hash(i + vec2(1.0, 0.0));
+  float c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
 
 void main() {
   vec3 a = texture2D(uTexA, vUv * uFitA.xy + uFitA.zw).rgb;
   vec3 b = texture2D(uTexB, vUv * uFitB.xy + uFitB.zw).rgb;
-  vec3 color = mix(a, b, uMix);
+
+  // ----- 液態溶解：用噪聲當門檻，新圖像水流一樣從各處滲進來 -----
+  // 兩層噪聲疊加（大塊流動 + 細節）；門檻隨 uMix 推進，整片掃過去換成新圖
+  float n = vnoise(vUv * 3.5 + uSeed) * 0.7
+          + vnoise(vUv * 9.0 + uSeed * 1.7) * 0.3;
+  float soft = 0.22;                          // 溶解邊界的柔軟度
+  float t = uMix * (1.0 + soft);              // 確保 uMix=1 時整片都換成 B
+  float reveal = smoothstep(n, n + soft, t);  // 0 = 還是 A，1 = 已是 B
+  vec3 color = mix(a, b, reveal);
+
+  // 溶解邊界一圈桃紅柔光（呼應品牌色），只在換圖過程中亮
+  float edge = 1.0 - abs(reveal - 0.5) * 2.0; // 邊界（reveal≈0.5）處最大
+  edge = smoothstep(0.55, 1.0, edge)
+       * smoothstep(0.0, 0.08, uMix)          // 開頭淡入
+       * smoothstep(1.0, 0.92, uMix);         // 結尾淡出
+  color += vec3(0.914, 0.192, 0.8) * edge * 0.5;
 
   // hover 時的桃紅細框：算出離邊緣的距離，邊緣一圈染成品牌色
   float toEdge = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
@@ -83,6 +109,7 @@ export function createCards({ isMobile, reducedMotion }) {
       uTexA: { value: null },
       uTexB: { value: null },
       uMix: { value: 0 },
+      uSeed: { value: 0 }, // 每次換圖前隨機，溶解圖案才不重複
       uOpacity: { value: 0 }, // 貼圖載到才淡入
       uHover: { value: 0 },
       uFitA: { value: new THREE.Vector4(1, 1, 0, 0) },
@@ -198,6 +225,7 @@ export function createCards({ isMobile, reducedMotion }) {
       const aspect = next.image.width / next.image.height
       uniforms.uTexB.value = next
       uniforms.uFitB.value = coverFit(card.userData.planeAspect, aspect)
+      uniforms.uSeed.value = Math.random() * 10 // 這次溶解的隨機圖案
 
       gsap.to(uniforms.uMix, {
         value: 1,
