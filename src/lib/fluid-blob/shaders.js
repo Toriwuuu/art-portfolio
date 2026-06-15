@@ -105,14 +105,21 @@ float blobDisplace(vec3 p) {
   return n * uAmp * (1.0 + facing * uRipple);
 }
 
-// 游標牽引：游標附近的表面被輕輕攪動（高頻流動噪聲，會往內外盪 → 像被光束擾動而散開），
-// uPokeStrength 衰減回 0 時回到平靜（流體聚合）。沿法線、力道刻意小。
+// 游標牽引：游標附近的表面被攪動（高頻流動噪聲，往內外盪 → 像被光束擾動而散開），
+// uPokeStrength 衰減回 0 時回到平靜（流體聚合）。沿法線推。
 float blobPoke(vec3 p) {
   if (uPokeStrength < 0.001) return 0.0;
   float dist = length(p - uPokePoint);
   float spot = exp(-dist * dist * 2.2);                     // 只影響游標附近
   float churn = blobSnoise(p * uFreq * 2.5 + uTime * 3.0);  // -1~1 高頻流動
-  return spot * uPokeStrength * (0.15 + churn * 0.45);      // 以攪動為主、微鼓
+  return spot * uPokeStrength * churn * 0.6;                // 對稱：churn>0 往外凸、churn<0 往內凹
+}
+
+// 形狀的「總位移」＝ 基礎流動 + 游標攪動。
+// 重點：法線重算也要用這個（不能只用 blobDisplace），
+// 否則凹凸的頂點動了、表面朝向卻沒變，玻璃就折射不出凹凸、幾乎看不到。
+float blobTotal(vec3 p) {
+  return blobDisplace(p) + blobPoke(p);
 }
 `
 
@@ -131,20 +138,20 @@ export function injectDisplacement(material, uniforms) {
       .replace(
         '#include <beginnormal_vertex>',
         /* glsl */ `
-        vec3 blobDisplaced = position + normal * blobDisplace(position);
+        vec3 blobDisplaced = position + normal * blobTotal(position);
         float blobEps = 0.08;
         vec3 blobTangent = normalize(cross(normal, vec3(0.0, 1.0, 0.001)));
         vec3 blobBitangent = normalize(cross(normal, blobTangent));
         vec3 blobPT = position + blobTangent * blobEps;
         vec3 blobPB = position + blobBitangent * blobEps;
-        vec3 blobDT = (blobPT + normal * blobDisplace(blobPT)) - blobDisplaced;
-        vec3 blobDB = (blobPB + normal * blobDisplace(blobPB)) - blobDisplaced;
+        vec3 blobDT = (blobPT + normal * blobTotal(blobPT)) - blobDisplaced;
+        vec3 blobDB = (blobPB + normal * blobTotal(blobPB)) - blobDisplaced;
         vec3 objectNormal = normalize(cross(blobDT, blobDB));
         `
       )
       .replace(
         '#include <begin_vertex>',
-        /* glsl */ `vec3 transformed = position + normal * (blobDisplace(position) + blobPoke(position));`
+        /* glsl */ `vec3 transformed = position + normal * blobTotal(position);`
       )
   }
   material.needsUpdate = true
