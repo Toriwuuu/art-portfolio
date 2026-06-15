@@ -89,7 +89,7 @@ export function createFluidBlob(options = {}) {
       const speed = dt > 1e-6 ? mouseVel.length() / dt : 0 // NDC/秒（dt=0 的首幀防 0/0=NaN）
       // 強度：滑動越快衝越高；之後以 dt 校正的衰減慢慢回到 0（= 流體聚合）
       pokeStrength *= Math.pow(0.1, dt)         // 約 1 秒衰減
-      pokeStrength = Math.max(pokeStrength, Math.min(speed * 0.25, 1))
+      pokeStrength = Math.max(pokeStrength, Math.min(speed * 0.3, 1))
       // 影響點 = 游標映到世界（球在原點，游標在球上時最有感），再轉進物件座標
       pokePointWorld.set(uniforms.uMouse.value.x * 3.0, uniforms.uMouse.value.y * 3.0, 0)
       _invQuat.copy(mesh.quaternion).invert()

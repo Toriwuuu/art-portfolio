@@ -112,7 +112,7 @@ float blobPoke(vec3 p) {
   float dist = length(p - uPokePoint);
   float spot = exp(-dist * dist * 2.2);                     // 只影響游標附近
   float churn = blobSnoise(p * uFreq * 2.5 + uTime * 3.0);  // -1~1 高頻流動
-  return spot * uPokeStrength * (0.1 + churn * 0.3);        // 以攪動為主、微鼓
+  return spot * uPokeStrength * (0.15 + churn * 0.45);      // 以攪動為主、微鼓
 }
 `
 
