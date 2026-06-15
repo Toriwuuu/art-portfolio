@@ -5,27 +5,33 @@
 
 import { works, thumbSrc } from './data.js'
 import { open as openLightbox } from './lightbox.js'
+import { workName, onLangChange } from './i18n.js'
 
 export function initFallback() {
   const mount = document.getElementById('fallback')
   mount.hidden = false
 
-  const html = works
-    .map(
-      (work, i) => `
-      <button class="cell" type="button" data-index="${i}" aria-label="${work.title}">
-        <img src="${thumbSrc(work, work.files[0])}" alt="${work.title}" loading="lazy" decoding="async">
-        <span class="cell-title">${work.title}</span>
+  function render() {
+    const html = works
+      .map(
+        (work, i) => `
+      <button class="cell" type="button" data-index="${i}" aria-label="${workName(work)}">
+        <img src="${thumbSrc(work, work.files[0])}" alt="${workName(work)}" loading="lazy" decoding="async">
+        <span class="cell-title">${workName(work)}</span>
       </button>
     `
-    )
-    .join('')
+      )
+      .join('')
 
-  mount.innerHTML = `<div class="fallback-grid">${html}</div>`
+    mount.innerHTML = `<div class="fallback-grid">${html}</div>`
 
-  mount.querySelectorAll('.cell').forEach((cell) => {
-    cell.addEventListener('click', () => {
-      openLightbox(works[Number(cell.dataset.index)])
+    mount.querySelectorAll('.cell').forEach((cell) => {
+      cell.addEventListener('click', () => {
+        openLightbox(works[Number(cell.dataset.index)])
+      })
     })
-  })
+  }
+
+  render()
+  onLangChange(render) // 切換語言時重建縮圖牆的文字
 }

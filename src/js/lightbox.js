@@ -6,6 +6,7 @@
 
 import { fullSrc, thumbSrc } from './data.js'
 import { icons } from './icons.js'
+import { t, thumbAria, workName, workDesc, onLangChange } from './i18n.js'
 
 let overlay = null     // 燈箱外層（只建立一次，重複使用）
 let lastFocused = null // 開燈箱前的焦點元素，關閉時還回去
@@ -25,17 +26,17 @@ function buildOverlay() {
   overlay.className = 'lightbox'
   overlay.setAttribute('role', 'dialog')
   overlay.setAttribute('aria-modal', 'true')
-  overlay.setAttribute('aria-label', '作品檢視')
+  overlay.setAttribute('aria-label', t('lightboxLabel'))
   overlay.hidden = true
 
   overlay.innerHTML = `
-    <button class="lightbox-close" type="button" aria-label="關閉">${icons.close}</button>
+    <button class="lightbox-close" type="button" aria-label="${t('close')}">${icons.close}</button>
     <div class="lightbox-stage">
       <div class="lightbox-media">
         <div class="lightbox-frame">
-          <button class="lightbox-arrow lightbox-arrow--prev" type="button" aria-label="上一張">${icons.chevronLeft}</button>
+          <button class="lightbox-arrow lightbox-arrow--prev" type="button" aria-label="${t('prev')}">${icons.chevronLeft}</button>
           <img class="lightbox-main" alt="" decoding="async">
-          <button class="lightbox-arrow lightbox-arrow--next" type="button" aria-label="下一張">${icons.chevronRight}</button>
+          <button class="lightbox-arrow lightbox-arrow--next" type="button" aria-label="${t('next')}">${icons.chevronRight}</button>
         </div>
         <div class="lightbox-thumbs"></div>
       </div>
@@ -51,6 +52,9 @@ function buildOverlay() {
   overlay.querySelector('.lightbox-close').addEventListener('click', close)
   overlay.querySelector('.lightbox-arrow--prev').addEventListener('click', () => step(-1))
   overlay.querySelector('.lightbox-arrow--next').addEventListener('click', () => step(1))
+
+  // 語言切換時即時更新靜態 aria 與（若正開著）目前作品的文字
+  onLangChange(applyLang)
 
   // 點黑底（stage 的空白處）也能關閉
   overlay.addEventListener('click', (e) => {
@@ -73,15 +77,8 @@ export function open(work) {
   current = work
   idx = 0
 
-  // ----- 右側文字：標題 / 年份 / 說明 -----
-  // 標題優先用作品原名（name），沒有就沿用 title（插畫作品、或年份分組標題）
-  overlay.querySelector('.lightbox-title').textContent = work.name || work.title
-  const yearEl = overlay.querySelector('.lightbox-year')
-  yearEl.textContent = work.year ? String(work.year) : ''
-  yearEl.hidden = !work.year
-  const descEl = overlay.querySelector('.lightbox-desc')
-  descEl.textContent = work.desc || ''
-  descEl.hidden = !work.desc
+  // ----- 右側文字：標題 / 年份 / 說明（依當前語言；英文缺則 fallback 中文）-----
+  fillInfo()
 
   // ----- 縮圖列（多圖才有）-----
   const multi = work.files.length > 1
@@ -92,7 +89,7 @@ export function open(work) {
     ? work.files
         .map(
           (file, i) => `
-            <button class="lightbox-thumb" type="button" data-i="${i}" aria-label="第 ${i + 1} 張">
+            <button class="lightbox-thumb" type="button" data-i="${i}" aria-label="${thumbAria(i + 1)}">
               <img src="${thumbSrc(work, file)}" alt="" loading="lazy" decoding="async">
             </button>`
         )
@@ -121,7 +118,7 @@ function setMain(i) {
   // 縮圖先當底圖墊著，原圖載好前不會空一塊（漸進顯影）
   frame.style.backgroundImage = `url("${thumbSrc(current, file)}")`
   main.src = fullSrc(current, file)
-  main.alt = current.name || current.title
+  main.alt = workName(current)
 
   overlay.querySelectorAll('.lightbox-thumb').forEach((btn, k) =>
     btn.classList.toggle('is-active', k === idx)
@@ -133,6 +130,33 @@ function setMain(i) {
 
 function step(dir) {
   if (current && current.files.length > 1) setMain(idx + dir)
+}
+
+// 依當前語言填右側文字（標題／年份／說明）。open() 與切換語言時都呼叫。
+function fillInfo() {
+  if (!overlay || !current) return
+  overlay.querySelector('.lightbox-title').textContent = workName(current)
+  const yearEl = overlay.querySelector('.lightbox-year')
+  yearEl.textContent = current.year ? String(current.year) : ''
+  yearEl.hidden = !current.year
+  const descEl = overlay.querySelector('.lightbox-desc')
+  const d = workDesc(current)
+  descEl.textContent = d
+  descEl.hidden = !d
+}
+
+// 語言切換：更新靜態 aria；若燈箱正開著，連作品文字與縮圖 aria 一起重繪
+function applyLang() {
+  if (!overlay) return
+  overlay.setAttribute('aria-label', t('lightboxLabel'))
+  overlay.querySelector('.lightbox-close')?.setAttribute('aria-label', t('close'))
+  overlay.querySelector('.lightbox-arrow--prev')?.setAttribute('aria-label', t('prev'))
+  overlay.querySelector('.lightbox-arrow--next')?.setAttribute('aria-label', t('next'))
+  if (overlay.hidden || !current) return
+  fillInfo()
+  overlay
+    .querySelectorAll('.lightbox-thumb')
+    .forEach((btn, i) => btn.setAttribute('aria-label', thumbAria(i + 1)))
 }
 
 function close() {
