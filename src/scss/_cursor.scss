@@ -13,8 +13,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 10px;
-    height: 10px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: $pink;
     box-shadow:
@@ -47,8 +47,8 @@
 
   // hover 到可點的卡片時核心變大變亮（取代原本的 pointer 游標提示）
   body.is-card-hover .beam {
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     box-shadow:
       0 0 18px 4px rgba(233, 49, 204, 0.95),
       0 0 44px 12px rgba(233, 49, 204, 0.5);
