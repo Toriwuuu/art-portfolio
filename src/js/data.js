@@ -81,9 +81,15 @@ export const works = [
   { id: 'plastic-2020', type: 'plastic', year: 2020, title: '2020', dir: 'plastic/2020', files: ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg'],
     name: '自作多情',
     desc: '半身女性大理石像，以肩膀為界，其下連同台座塗滿粉紅，其上保留大理石的白。她面向牆上的圓鏡，鏡心卻被一塊粉紅方塊遮住，看不見自己——就像被情感佔據思緒：旁人看來她是清醒的（白），她卻最清楚自己仍為情所困。若從她的視角看鏡中，肩膀以上成了一塊粉紅色塊，雕塑、鏡面與鏡中影像三者疊合，讓「色塊」這種繪畫性透過影像的類平面性被說出。' },
-  { id: 'plastic-2019', type: 'plastic', year: 2019, title: '2019', dir: 'plastic/2019', files: ['01.jpg', '02.jpg', '03.jpg'] },
-  { id: 'plastic-2018', type: 'plastic', year: 2018, title: '2018', dir: 'plastic/2018', files: ['01.jpg', '02.jpg', '03.jpg'] },
-  { id: 'plastic-2017', type: 'plastic', year: 2017, title: '2017', dir: 'plastic/2017', files: ['01.jpg', '02.jpg'] },
+  { id: 'plastic-2019', type: 'plastic', year: 2019, title: '2019', dir: 'plastic/2019', files: ['01.jpg', '02.jpg', '03.jpg'],
+    name: '',
+    desc: '' },
+  { id: 'plastic-2018', type: 'plastic', year: 2018, title: '2018', dir: 'plastic/2018', files: ['01.jpg', '02.jpg', '03.jpg'],
+    name: '',
+    desc: '' },
+  { id: 'plastic-2017', type: 'plastic', year: 2017, title: '2017', dir: 'plastic/2017', files: ['01.jpg', '02.jpg'],
+    name: '',
+    desc: '' },
 ]
 
 // 組出圖片路徑（BASE_URL 讓部署到子目錄也不會壞圖）
