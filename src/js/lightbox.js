@@ -74,7 +74,8 @@ export function open(work) {
   idx = 0
 
   // ----- 右側文字：標題 / 年份 / 說明 -----
-  overlay.querySelector('.lightbox-title').textContent = work.title
+  // 標題優先用作品原名（name），沒有就沿用 title（插畫作品、或年份分組標題）
+  overlay.querySelector('.lightbox-title').textContent = work.name || work.title
   const yearEl = overlay.querySelector('.lightbox-year')
   yearEl.textContent = work.year ? String(work.year) : ''
   yearEl.hidden = !work.year
@@ -120,7 +121,7 @@ function setMain(i) {
   // 縮圖先當底圖墊著，原圖載好前不會空一塊（漸進顯影）
   frame.style.backgroundImage = `url("${thumbSrc(current, file)}")`
   main.src = fullSrc(current, file)
-  main.alt = current.title
+  main.alt = current.name || current.title
 
   overlay.querySelectorAll('.lightbox-thumb').forEach((btn, k) =>
     btn.classList.toggle('is-active', k === idx)
