@@ -125,15 +125,15 @@ async function buildPane(container, { noiseBg, blob, cards, pinkLight }) {
       applyingPreset = false
     })
 
-  // ---------- 背景雜訊 ----------
-  const fBg = pane.addFolder({ title: '背景雜訊' })
-  fBg.addBinding(params, 'bgColor', { label: '底色', view: 'color' })
+  // ---------- 背景星雲 ----------
+  const fBg = pane.addFolder({ title: '背景星雲' })
+  fBg.addBinding(params, 'bgColor', { label: '太空底色', view: 'color' })
     .on('change', (e) => noiseBg.uniforms.uColor.value.set(e.value))
-  fBg.addBinding(params, 'bgIntensity', { label: '顆粒強度', min: 0, max: 0.3, step: 0.005 })
+  fBg.addBinding(params, 'bgIntensity', { label: '星雲強度', min: 0, max: 0.5, step: 0.01 })
     .on('change', (e) => (noiseBg.uniforms.uIntensity.value = e.value))
-  fBg.addBinding(params, 'bgScale', { label: '顆粒大小', min: 1, max: 8, step: 0.5 })
+  fBg.addBinding(params, 'bgScale', { label: '星雲尺度', min: 0.5, max: 6, step: 0.1 })
     .on('change', (e) => (noiseBg.uniforms.uScale.value = e.value))
-  fBg.addBinding(params, 'bgSpeed', { label: '飄動速度', min: 0, max: 4, step: 0.1 })
+  fBg.addBinding(params, 'bgSpeed', { label: '流動速度', min: 0, max: 3, step: 0.05 })
     .on('change', (e) => (noiseBg.uniforms.uSpeed.value = e.value))
 
   // ---------- 玻璃材質 ----------

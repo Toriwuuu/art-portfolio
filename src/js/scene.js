@@ -52,9 +52,16 @@ export function initScene() {
   )
   camera.position.z = isMobile ? CONFIG.cameraZMobile : CONFIG.cameraZ
 
-  // ----- 動態雜訊背景（最底層）-----
+  // ----- 動態星雲背景（最底層）-----
   const noiseBg = createNoiseBg()
   scene.add(noiseBg.mesh)
+
+  // 把背景星雲的解析度（含像素比）餵進 shader，做雲氣的長寬比校正；縮放時同步
+  function syncBgResolution() {
+    const dpr = renderer.getPixelRatio()
+    noiseBg.uniforms.uResolution.value.set(window.innerWidth * dpr, window.innerHeight * dpr)
+  }
+  syncBgResolution()
 
   // ----- 中央流體（fluid-blob 模組：滑鼠跟隨、時間、折射 FBO 都在它肚子裡）-----
   const blob = createFluidBlob({ isMobile, reducedMotion })
@@ -79,6 +86,7 @@ export function initScene() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
+    syncBgResolution()
   })
 
   // ----- 渲染迴圈 -----
@@ -91,7 +99,7 @@ export function initScene() {
     const dt = frameDelta(t)
 
     blob.update(dt)                // 流體的時間/滑鼠跟隨/自轉（模組內部處理）
-    noiseBg.uniforms.uTime.value = reducedMotion ? 0 : t // 偏好減少動態 → 顆粒靜止
+    noiseBg.uniforms.uTime.value = reducedMotion ? 0 : t // 偏好減少動態 → 星雲靜止
 
     controls.update(dt)            // 拖曳慣性/自轉/縮放/hover
     cards.update(camera)           // billboard：卡片面向鏡頭
