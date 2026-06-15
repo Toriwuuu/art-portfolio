@@ -67,20 +67,35 @@ async function buildPane(container, { noiseBg, blob, cards, pinkLight }) {
     bgScale: BG_CONFIG.scale,
     bgSpeed: BG_CONFIG.speed,
     // 玻璃材質
-    roughness: blob.params.roughness,
-    chromaticAberration: blob.params.chromaticAberration,
-    distortion: blob.params.distortion,
-    temporalDistortion: blob.params.temporalDistortion,
-    thickness: blob.params.thickness,
-    ior: blob.params.ior,
-    attenuationColor: blob.params.attenuationColor,
-    attenuationDistance: blob.params.attenuationDistance,
-    envMapIntensity: blob.params.envMapIntensity,
+    glassColor: blob.params.glassColor,                   // 玻璃本體色
+    roughness: blob.params.roughness,                     // 粗糙度
+    chromaticAberration: blob.params.chromaticAberration, // 色散
+    anisotropicBlur: blob.params.anisotropicBlur,         // 各向異性模糊
+    distortion: blob.params.distortion,                   // 折射扭曲
+    distortionScale: blob.params.distortionScale,         // 扭曲尺度
+    temporalDistortion: blob.params.temporalDistortion,   // 扭曲流速
+    thickness: blob.params.thickness,                     // 厚度
+    ior: blob.params.ior,                                 // 折射率
+    attenuationColor: blob.params.attenuationColor,       // 透色顏色
+    attenuationDistance: blob.params.attenuationDistance, // 透色距離
+    envMapIntensity: blob.params.envMapIntensity,         // 反射強度
     // 流體形狀
-    noiseFreq: blob.params.noiseFreq,
-    noiseAmp: blob.params.noiseAmp,
-    flowSpeed: blob.params.flowSpeed,
-    mouseRipple: blob.params.mouseRipple,
+    noiseFreq: blob.params.noiseFreq,     // 皺褶頻率
+    noiseAmp: blob.params.noiseAmp,       // 起伏幅度
+    flowSpeed: blob.params.flowSpeed,     // 流動速度
+    mouseRipple: blob.params.mouseRipple, // 滑鼠漣漪
+    // 游標與運動
+    autoRotate: blob.params.autoRotate,           // 自轉開關
+    rotateSpeed: blob.params.rotateSpeed,         // 自轉速度
+    mouseLerp: blob.params.mouseLerp,             // 滑鼠跟隨慵懶度
+    mouseTilt: blob.params.mouseTilt,             // 滑鼠傾轉幅度
+    poke: blob.params.poke,                       // 游標撥開開關
+    pokeDemo: blob.params.pokeDemo,               // 自動示範（邊調邊看）
+    pokeDepth: blob.params.pokeDepth,             // 凹槽深度
+    pokeWidth: blob.params.pokeWidth,             // 凹槽廣度
+    pokeReboundTime: blob.params.pokeReboundTime, // 回彈時間（秒）
+    pokeSensitivity: blob.params.pokeSensitivity, // 撥開靈敏度
+    pokeTurnSmooth: blob.params.pokeTurnSmooth,   // 凹槽轉向柔順
     // 卡片與運動
     cardRadius: CARDS_CONFIG.radius,
     cardSize: 1,
@@ -123,13 +138,19 @@ async function buildPane(container, { noiseBg, blob, cards, pinkLight }) {
   // ---------- 玻璃材質 ----------
   // MeshTransmissionMaterial 的屬性直接 set 就會生效（內部是 uniforms）
   const fGlass = pane.addFolder({ title: '玻璃材質', expanded: false })
-  fGlass.addBinding(params, 'roughness', { label: '粗糙度', min: 0, max: 1, step: 0.01 })
+  fGlass.addBinding(params, 'glassColor', { label: '玻璃本體色', view: 'color' }) // 玻璃本體色
+    .on('change', (e) => blob.material.color.set(e.value))
+  fGlass.addBinding(params, 'roughness', { label: '粗糙度', min: 0, max: 1, step: 0.01 }) // 粗糙度
     .on('change', (e) => (blob.material.roughness = e.value))
-  fGlass.addBinding(params, 'chromaticAberration', { label: '色散', min: 0, max: 2, step: 0.05 })
+  fGlass.addBinding(params, 'chromaticAberration', { label: '色散', min: 0, max: 2, step: 0.05 }) // 色散
     .on('change', (e) => (blob.material.chromaticAberration = e.value))
-  fGlass.addBinding(params, 'distortion', { label: '折射扭曲', min: 0, max: 2, step: 0.05 })
+  fGlass.addBinding(params, 'anisotropicBlur', { label: '各向異性模糊', min: 0, max: 2, step: 0.01 }) // 各向異性模糊（太大會把後面糊掉）
+    .on('change', (e) => (blob.material.anisotropicBlur = e.value))
+  fGlass.addBinding(params, 'distortion', { label: '折射扭曲', min: 0, max: 2, step: 0.05 }) // 折射扭曲
     .on('change', (e) => (blob.material.distortion = e.value))
-  fGlass.addBinding(params, 'temporalDistortion', { label: '扭曲流速', min: 0, max: 1, step: 0.01 })
+  fGlass.addBinding(params, 'distortionScale', { label: '扭曲尺度', min: 0, max: 2, step: 0.05 }) // 扭曲尺度
+    .on('change', (e) => (blob.material.distortionScale = e.value))
+  fGlass.addBinding(params, 'temporalDistortion', { label: '扭曲流速', min: 0, max: 1, step: 0.01 }) // 扭曲流速
     .on('change', (e) => (blob.material.temporalDistortion = e.value))
   fGlass.addBinding(params, 'thickness', { label: '厚度', min: 0, max: 3, step: 0.05 })
     .on('change', (e) => (blob.material.thickness = e.value))
@@ -152,6 +173,33 @@ async function buildPane(container, { noiseBg, blob, cards, pinkLight }) {
     .on('change', (e) => (blob.params.flowSpeed = e.value))
   fShape.addBinding(params, 'mouseRipple', { label: '滑鼠漣漪', min: 0, max: 1, step: 0.05 })
     .on('change', (e) => (blob.uniforms.uRipple.value = e.value))
+
+  // ---------- 游標與運動 ----------
+  // 球體自轉、滑鼠跟隨傾轉、以及「游標撥開」凹槽互動。
+  // 開關/數值寫回 blob.params（update 每幀讀），凹槽深度直接寫 uPokeDepth uniform。
+  const fMotion = pane.addFolder({ title: '游標與運動', expanded: false })
+  fMotion.addBinding(params, 'autoRotate', { label: '自轉開關' }) // 自轉開關
+    .on('change', (e) => (blob.params.autoRotate = e.value))
+  fMotion.addBinding(params, 'rotateSpeed', { label: '自轉速度', min: 0, max: 0.3, step: 0.005 }) // 自轉速度（弧度/秒）
+    .on('change', (e) => (blob.params.rotateSpeed = e.value))
+  fMotion.addBinding(params, 'mouseLerp', { label: '跟隨慵懶度', min: 0.01, max: 0.3, step: 0.01 }) // 滑鼠跟隨慢半拍程度（越小越慵懶）
+    .on('change', (e) => (blob.params.mouseLerp = e.value))
+  fMotion.addBinding(params, 'mouseTilt', { label: '滑鼠傾轉', min: 0, max: 1, step: 0.01 }) // 滑鼠造成的傾轉幅度（弧度）
+    .on('change', (e) => (blob.params.mouseTilt = e.value))
+  fMotion.addBinding(params, 'poke', { label: '游標撥開開關' }) // 游標撥開開關（沿移動方向壓出淺凹槽）
+    .on('change', (e) => (blob.params.poke = e.value))
+  fMotion.addBinding(params, 'pokeDemo', { label: '自動示範' }) // 自動示範：球自己循環撥開，方便邊調下面三項邊看
+    .on('change', (e) => (blob.params.pokeDemo = e.value))
+  fMotion.addBinding(params, 'pokeDepth', { label: '凹槽深度', min: 0, max: 1, step: 0.01 }) // 凹槽深度（沿法線往內；過深折射會亂）
+    .on('change', (e) => (blob.uniforms.uPokeDepth.value = e.value))
+  fMotion.addBinding(params, 'pokeWidth', { label: '凹槽廣度', min: 0.3, max: 3, step: 0.05 }) // 凹槽廣度（越大溝越寬、影響範圍越大）
+    .on('change', (e) => (blob.uniforms.uPokeWidth.value = e.value))
+  fMotion.addBinding(params, 'pokeReboundTime', { label: '回彈時間(秒)', min: 0.2, max: 30, step: 0.1 }) // 停手後約這麼久淡回平整；越大越「黏」、撐越久
+    .on('change', (e) => (blob.params.pokeReboundTime = e.value))
+  fMotion.addBinding(params, 'pokeSensitivity', { label: '撥開靈敏度', min: 0, max: 1.5, step: 0.05 }) // 游標速度 × 此值 = 凹槽強度（越大越輕劃就有感）
+    .on('change', (e) => (blob.params.pokeSensitivity = e.value))
+  fMotion.addBinding(params, 'pokeTurnSmooth', { label: '轉向柔順', min: 0, max: 0.97, step: 0.01 }) // 0=瞬間硬切、越接近 1 越慢越柔順（改變方向時不再「啪」一下跳）
+    .on('change', (e) => (blob.params.pokeTurnSmooth = e.value))
 
   // ---------- 卡片與運動 ----------
   const fCards = pane.addFolder({ title: '卡片與運動', expanded: false })

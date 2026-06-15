@@ -64,8 +64,13 @@ export function createFluidBlob(options = {}) {
   const prevMouse = new THREE.Vector2()
   const mouseVel = new THREE.Vector2()
   const pokePointWorld = new THREE.Vector3()
+  const pokeDirWorld = new THREE.Vector3()
+  const pokeAccum = new THREE.Vector2()              // 累積的游標位移（累到夠遠才更新「目標方向」，濾掉慢速抖動）
+  const pokeDirTarget = new THREE.Vector2(1, 0)      // 目標方向（由累積位移決定，乾淨不抖）
+  const pokeDirSmooth = new THREE.Vector2(1, 0)      // 實際方向（每幀緩動逼近目標 → 轉向平順、不硬切）
   const _invQuat = new THREE.Quaternion()
   let pokeStrength = 0
+  let demoTime = 0 // 自動示範用的時間累加器
 
   // 每幀呼叫。dt = 這一幀經過的秒數（內部夾上限，切分頁回來不會跳一大步）
   function update(dt) {
@@ -82,19 +87,78 @@ export function createFluidBlob(options = {}) {
       uniforms.uMouse.value.x * params.mouseTilt
     mesh.rotation.x = uniforms.uMouse.value.y * -params.mouseTilt
 
-    // ----- 游標牽引：游標掃過時把附近流體攪動、輕輕鼓盪，停手後衰減回平靜（聚合）-----
+    // ----- 游標撥開：游標掃過時沿移動方向壓出凹槽，停手後衰減回彈 -----
     if (params.poke && params.interactive) {
-      mouseVel.subVectors(mouseTarget, prevMouse) // 這一幀滑鼠在 NDC 移了多少
-      prevMouse.copy(mouseTarget)
-      const speed = dt > 1e-6 ? mouseVel.length() / dt : 0 // NDC/秒（dt=0 的首幀防 0/0=NaN）
-      // 強度：滑動越快衝越高；之後以 dt 校正的衰減慢慢回到 0（= 流體聚合）
-      pokeStrength *= Math.pow(0.1, dt)         // 約 1 秒衰減
-      pokeStrength = Math.max(pokeStrength, Math.min(speed * 0.3, 1))
-      // 影響點 = 游標映到世界（球在原點，游標在球上時最有感），再轉進物件座標
-      pokePointWorld.set(uniforms.uMouse.value.x * 3.0, uniforms.uMouse.value.y * 3.0, 0)
+      // 一幀要用的量：劃動速度、影響點 NDC 座標、移動方向（dirX/dirY）
+      let speed, ndcX, ndcY, dirX, dirY
+      if (params.pokeDemo) {
+        // 自動示範：球自己循環做「劃一下 → 放手回彈」，讓凹槽深度/回彈/靈敏度在面板調整時就看得見。
+        // 用「虛擬游標」取代真實滑鼠：固定的劃動速度 × 靈敏度 = 強度，放手段速度歸 0 → 看回彈衰減。
+        demoTime += dt
+        const T = 1.6                          // 一輪 = 劃一下 + 放手回彈
+        const cycle = Math.floor(demoTime / T) // 每輪換個位置示範（輪內位置固定）
+        const ang = cycle * 2.0
+        ndcX = Math.cos(ang) * 0.33            // 影響點落在球的正面（NDC 半徑 0.33）
+        ndcY = Math.sin(ang) * 0.33
+        dirX = -Math.sin(ang)                  // 沿圓周切線方向劃
+        dirY = Math.cos(ang)
+        speed = (demoTime % T) / T < 0.3 ? 3.0 : 0.0 // 前 0.3 劃動（高速）、其餘放手（速度 0 → 衰減）
+        prevMouse.copy(mouseTarget)            // 保持真實滑鼠基準新鮮，關掉示範時才不會暴衝一下
+      } else {
+        mouseVel.subVectors(mouseTarget, prevMouse) // 這一幀滑鼠在 NDC 移了多少
+        prevMouse.copy(mouseTarget)
+        speed = dt > 1e-6 ? mouseVel.length() / dt : 0 // NDC/秒（dt=0 的首幀防 0/0=NaN）
+        ndcX = uniforms.uMouse.value.x
+        ndcY = uniforms.uMouse.value.y
+        // 真實游標的方向不在這裡取：改用下方「累積位移」濾掉慢速抖動（demo 才用 dirX/dirY）
+      }
+      // 強度：劃動越快衝越高（速度 × 靈敏度，夾在 1 以內）；之後以 dt 校正的衰減回到 0（= 凹槽回彈、流體聚合）
+      pokeStrength *= Math.pow(0.1, dt / Math.max(params.pokeReboundTime, 0.05)) // 經過 pokeReboundTime 秒 → 衰到 ~10%
+      pokeStrength = Math.max(pokeStrength, Math.min(speed * params.pokeSensitivity, 1))
+      // 影響點 = 游標映到球的「正面半球表面」，再轉進物件座標。
+      // 關鍵：z 不能固定 0（那會把點放在通過球心的切片上，只有最外緣 z≈0 處貼到表面、
+      // 正面看到的那片幾乎不反應）。改取 z=√(R²−x²−y²) 讓點落在朝鏡頭的表面上。
+      const wx = ndcX * 3.0
+      const wy = ndcY * 3.0
+      const R = params.radius
+      const wr = Math.hypot(wx, wy)
+      if (wr < R) {
+        pokePointWorld.set(wx, wy, Math.sqrt(R * R - wr * wr)) // 輪廓內 → 正面半球（凸向鏡頭）
+      } else {
+        pokePointWorld.set((wx * R) / wr, (wy * R) / wr, 0)    // 輪廓外 → 收斂到赤道輪廓邊
+      }
       _invQuat.copy(mesh.quaternion).invert()
       uniforms.uPokePoint.value.copy(pokePointWorld).applyQuaternion(_invQuat)
       uniforms.uPokeStrength.value = pokeStrength
+      // 移動方向（物件座標），分兩段處理，慢速不抖、轉向也不硬切：
+      // 1) 目標方向 pokeDirTarget：累積位移，累到 TURN_COMMIT（固定 NDC 距離）才更新一次——
+      //    此時累積向量遠大於每幀 ±1px 的量化雜訊，方向乾淨。（示範模式方向本就平滑，直接當目標。）
+      // 2) 實際方向 pokeDirSmooth：每幀依「轉向柔順」緩動逼近目標 → 改變方向時平順轉過去，而非瞬間跳。
+      const TURN_COMMIT = 0.02 // 累積這麼多 NDC 位移才更新一次目標方向（內部值，足以濾掉量化雜訊）
+      if (params.pokeDemo) {
+        pokeDirTarget.set(dirX, dirY)
+        pokeAccum.set(0, 0)
+      } else {
+        pokeAccum.add(mouseVel)
+        if (pokeAccum.lengthSq() >= TURN_COMMIT * TURN_COMMIT) {
+          pokeDirTarget.copy(pokeAccum)
+          pokeAccum.set(0, 0)
+        }
+      }
+      // 凹槽對 dir↔−dir 完全對稱：把目標翻到與目前同側，緩動走最短路、180° 反向也不會經過 0
+      if (pokeDirSmooth.dot(pokeDirTarget) < 0) pokeDirTarget.negate()
+      // pokeTurnSmooth = 每幀保留比例（越大轉越慢越柔順）；dt 校正，幀率不同也一致
+      const ease = 1 - Math.pow(params.pokeTurnSmooth, dt * 60)
+      pokeDirSmooth.lerp(pokeDirTarget, ease)
+      if (pokeDirSmooth.lengthSq() > 1e-9) {
+        // 用與 uPokePoint 相同的 _invQuat，球自轉時凹槽仍對齊螢幕上的劃過方向
+        pokeDirWorld.set(pokeDirSmooth.x, pokeDirSmooth.y, 0).normalize()
+        uniforms.uPokeDir.value.copy(pokeDirWorld).applyQuaternion(_invQuat)
+      }
+    } else if (uniforms.uPokeStrength.value > 0.0001) {
+      // 撥開關閉（或不互動）時，讓殘留的凹槽平順收回，而不是凍在最後一格
+      pokeStrength *= Math.pow(0.1, dt / Math.max(params.pokeReboundTime, 0.05)) // 經過 pokeReboundTime 秒 → 衰到 ~10%
+      uniforms.uPokeStrength.value = pokeStrength < 0.001 ? (pokeStrength = 0) : pokeStrength
     }
   }
 

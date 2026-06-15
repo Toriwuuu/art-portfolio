@@ -95,6 +95,9 @@ uniform vec2 uMouse;
 uniform float uRipple;
 uniform vec3 uPokePoint;     // 游標映到球上的影響點（物件座標）
 uniform float uPokeStrength; // 0~1：游標越快越大，之後衰減回 0（聚合）
+uniform vec3 uPokeDir;       // 游標移動方向（物件座標、單位向量）
+uniform float uPokeDepth;    // 凹槽深度（沿法線往內）
+uniform float uPokeWidth;    // 凹槽廣度（1=預設；越大溝越寬、影響範圍越大）
 
 float blobDisplace(vec3 p) {
   float n = blobSnoise(p * uFreq + uTime) * 0.7
@@ -105,14 +108,20 @@ float blobDisplace(vec3 p) {
   return n * uAmp * (1.0 + facing * uRipple);
 }
 
-// 游標牽引：游標附近的表面被攪動（高頻流動噪聲，往內外盪 → 像被光束擾動而散開），
-// uPokeStrength 衰減回 0 時回到平靜（流體聚合）。沿法線推。
+// 游標撥開：沿游標移動方向，在表面壓出一道淺凹槽，
+// 兩側微微鼓起（被撥開的流體），uPokeStrength 衰減回 0 時立刻回彈（流體聚合）。
 float blobPoke(vec3 p) {
   if (uPokeStrength < 0.001) return 0.0;
-  float dist = length(p - uPokePoint);
-  float spot = exp(-dist * dist * 2.2);                     // 只影響游標附近
-  float churn = blobSnoise(p * uFreq * 2.5 + uTime * 3.0);  // -1~1 高頻流動
-  return spot * uPokeStrength * churn * 0.6;                // 對稱：churn>0 往外凸、churn<0 往內凹
+  vec3 d = p - uPokePoint;
+  float iw2 = 1.0 / (uPokeWidth * uPokeWidth);   // 廣度：把空間尺度放大（越寬，落差越緩、範圍越大）
+  float dist = length(d);
+  float spot = exp(-dist * dist * 2.2 * iw2);     // 影響範圍隨廣度放大
+  float along = dot(d, uPokeDir);                 // 沿移動方向的距離
+  float perp = length(d - along * uPokeDir);      // 離「劃過線」的垂直距離
+  float r2 = perp * perp * iw2;                   // 溝的垂直寬度隨廣度放大
+  // 中央往內凹、兩側往外鼓（墨西哥帽剖面：手指劃過水面的溝 + 兩道水唇）
+  float groove = -(1.0 - r2 * 6.0) * exp(-r2 * 9.0);
+  return spot * uPokeStrength * groove * uPokeDepth;
 }
 
 // 形狀的「總位移」＝ 基礎流動 + 游標攪動。

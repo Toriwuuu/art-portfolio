@@ -24,6 +24,9 @@ export function createBlobMesh(params) {
     // 游標牽引（值由 fluid-blob.js 每幀更新；已轉到物件座標）
     uPokePoint: { value: new THREE.Vector3(0, 0, 0) },
     uPokeStrength: { value: 0 },
+    uPokeDir: { value: new THREE.Vector3(1, 0, 0) },
+    uPokeDepth: { value: params.pokeDepth },
+    uPokeWidth: { value: params.pokeWidth },
   }
 
   let material
