@@ -126,7 +126,9 @@ export function initControls({ canvas, camera, group, cards, reducedMotion, onCa
   let pointerDirty = false
 
   // 貼圖還沒載到的卡片是隱形的，不該被滑到或點到
+  // GUI 關掉「顯示作品圖片」時整個卡片群被隱藏，這時也一律不偵測（避免點到看不見的卡片）
   function visibleCards() {
+    if (!group.visible) return []
     return cards.filter((c) => c.userData.uniforms.uOpacity.value > 0.5)
   }
 

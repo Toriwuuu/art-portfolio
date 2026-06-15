@@ -97,6 +97,7 @@ async function buildPane(container, { noiseBg, blob, cards, pinkLight }) {
     pokeSensitivity: blob.params.pokeSensitivity, // 撥開靈敏度
     pokeTurnSmooth: blob.params.pokeTurnSmooth,   // 凹槽轉向柔順
     // 卡片與運動
+    showCards: true, // 顯示作品圖片（關掉只剩中央流體球）
     cardRadius: CARDS_CONFIG.radius,
     cardSize: 1,
     autoSpeed: CONTROLS_CONFIG.autoSpeed,
@@ -203,6 +204,9 @@ async function buildPane(container, { noiseBg, blob, cards, pinkLight }) {
 
   // ---------- 卡片與運動 ----------
   const fCards = pane.addFolder({ title: '卡片與運動', expanded: false })
+  // 顯示／隱藏整圈作品圖片：關掉時整個卡片群不畫出來，也點不到、滑不到（見 controls.js）
+  fCards.addBinding(params, 'showCards', { label: '顯示作品圖片' })
+    .on('change', (e) => (cards.group.visible = e.value))
   fCards.addBinding(params, 'cardRadius', { label: '球半徑', min: 2, max: 5, step: 0.1 })
     .on('change', (e) => cards.setRadius(e.value))
   fCards.addBinding(params, 'cardSize', { label: '卡片大小', min: 0.5, max: 2, step: 0.05 })
